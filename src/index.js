@@ -41,6 +41,12 @@ app.use(errorHandler());
 
 const rutas = [
     //Recursos de imagen
+    ['/favicon.ico', '../public/img/favicon.ico'],
+    ['/apple-touch-icon.png', '../public/img/apple-touch-icon.png'],
+    ['/favicon-16x16.png', '../public/img/favicon-16x16.png'],
+    ['/favicon-32x32.png', '../public/img/favicon-32x32.png'],
+    ['/site.webmanifest', '../public/img/site.webmanifest'],
+
     
 
     //Rutas de js para iniciar sesión
@@ -65,10 +71,51 @@ rutas.forEach(([rutaEntrada, rutaArchivo]) => {
 
 app.use('/', express.static('./public/sesion'));
 
+// funcion para verificar nada
+function getnewCount(jsonToken) {
+    let newCount = 0;
+    jwt.verify(jsonToken, process.env.SECRET_KEY, (err, decoded) => {
+        if (err) {
+            return -1;
+        } else {
+            newCount = decoded.newCount;
+            console.log('newCount from the function: ' + newCount);
+        }
+    });
+    return newCount;
+}
 
-/* */
+
+app.use('/home', async (req, res, next) => {
+    if (req.session.jwt) {
+        const token = req.session.jwt;
+        jwt.verify(token, process.env.SECRET_KEY, (err, data) => {
+            if (err) {
+                console.log('err verificar home: ' + err);
+                return res.redirect('/login.html');
+            }
+            res.locals.user = data;
+            console.log('data verificar home: ' + data);
+            next();
+        });
+    } else {
+        console.log('err verificar home: ');
+        res.redirect('/login.html');
+    }
+}
+);
+
+
 
 app.post('/login', home.login);
+// app.use('/invitado/invitacion.html', express.static('./public/build2/views/Invitado/RegistrarInformacionPersonal.html'));
+
+app.use('/home/minutas.html', express.static('./public/home/minutas.html'));
+app.get('/api/sessionData', home.sessionData);
+
+
+
+ 
 
 
 

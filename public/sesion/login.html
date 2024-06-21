@@ -1,9 +1,16 @@
 <!DOCTYPE html>
 <html>
+
 <head>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+
     <title>Iniciar sesión</title>
-    
+
 </head>
+
 <body>
     <h1>Iniciar sesión</h1>
     <form>
@@ -34,23 +41,18 @@
                 },
                 body: JSON.stringify(datosInicioSesion)
             })
-            .then(response => response.json())
-            .then(data => {
-                // Manejar la respuesta del servidor
-                if (data.autenticado) {
-                    // El inicio de sesión fue exitoso
-                    alert("Inicio de sesión exitoso");
-                } else {
-                    // El inicio de sesión falló
-                    alert("Inicio de sesión fallido");
-                }
-            })
-            .catch(error => {
-                // Manejar errores de la solicitud
-                console.error("Error al iniciar sesión:", error);
-            });
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Inicio de sesión exitoso:", data);
+                    window.location.href = "/home/minutas.html";
+                })
+                .catch(error => {
+                    // Manejar errores de la solicitud
+                    console.error("Error al iniciar sesión:", error);
+                });
         }
     </script>
 
 </body>
+
 </html>

@@ -26,15 +26,17 @@ async function login(req, res) {
             return res.status(404).json({ error: 'Usuario no encontrado ooo', status: 404});
         }
 
-        const isMatch = await comparePassword(password, usuario.password_usuario);
+        const isMatch = await comparePassword(password, usuario.password);
 
         if (!isMatch) {
             return res.status(401).json({ error: 'Contraseña incorrecta', status: 401});
         }
         
-        const token = generateAccessToken(email, usuario.id_usuario, usuario.nombre_usuario, usuario.apellido_paterno);
+        const token = generateAccessToken(email, usuario.id_usuario, usuario.nombre, usuario.apellido_paterno);
         console.log('token: ' + token);
         req.session.jwt = token;
+        
+        console.log('login ok');
         res.status(200).json({
             ruta: "ruta de inicio de sesión exitoso",
             status: 200,
@@ -46,7 +48,32 @@ async function login(req, res) {
     }
 }
 
+async function sessionData(req, res) {
+    try {
+        const token = req.session.jwt;
+        if (!token) {
+            return res.status(401).json({ error: 'No autorizado', status: 401});
+        }
+        const data = jwt.verify(token, process.env.SECRET_KEY);
+        console.log('sessionData ok');
+        res.status(200).json({
+            data: data,
+            status: 200
+        });
+    }
+    catch (error) {
+        console.error('Error al obtener datos de la sesión:', error);
+        res.status(500).json({ error: 'Error interno del servidor', status: 500});
+    }
+
+}
+
+
+
+
+
 module.exports = {
-    login
+    login,
+    sessionData
 };
 
