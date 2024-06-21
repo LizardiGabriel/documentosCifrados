@@ -1,0 +1,12 @@
+{
+  "name": "minutas",
+  "version": "1.0.0",
+  "description": "proyecto de crypto 1",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon src/index.js"
+  },
+  "author": "",
+  "license": "ISC"
+}
