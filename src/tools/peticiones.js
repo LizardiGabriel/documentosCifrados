@@ -7,7 +7,7 @@ async function getUsersByEmailBD(email) {
     try {
         const usuario = await prisma.usuario.findFirst({
             where: {
-                email_usuario: email,
+                email: email,
             },
         });
         //console.log('respuesta de la bd: ', usuario);
@@ -35,23 +35,9 @@ async function getUsersByIDBD(ID) {
     }
 }
 
-async function getUsersByEmailBD(correo) {
-    console.log('peticion a la bd de getUsersByCorreo');
-    try {
-        const usuario = await prisma.usuario.findFirst({
-            where: {
-                email_usuario: correo,
-            },
-        });
-        return usuario;
-    } catch (error) {
-        console.error('Error al obtener usuario por ID:', error);
-        return null;
-    }
-}
+
 
 module.exports = {
     getUsersByEmailBD,
     getUsersByIDBD,
-    getUsersByEmailBD,
 };

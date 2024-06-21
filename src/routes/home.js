@@ -15,12 +15,10 @@ function generateAccessToken(email, idUsuario, nombre, apellido) {
 
 async function login(req, res) {
     try {
-        console.log('mensaje --> login');
-        const email = req.body.email;
-        const password = req.body.password;
-
-        //console.log(req.body);
+        const email = req.body.correo;
+        const password = req.body.pass;
         
+        console.log('mensaje --> login, email: ' + email + ', password: ' + password);      
         
         const usuario = await getUsersByEmailBD(email);
 
