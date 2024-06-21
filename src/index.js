@@ -8,24 +8,12 @@ const logger = require('morgan');
 const errorHandler = require('errorhandler');
 const methodOverride = require('method-override');
 
-
-const home = require('./routes/home');
-const reuniones = require('./routes/reuniones');
-
-const admin = require('./routes/admin');
-const anfitrion = require('./routes/anfitrion');
-const seguridad = require('./routes/seguridad');
-const externo = require('./routes/externo');
-const invitado = require('./routes/invitado');
 const { log } = require('console');
-
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
-const jwtFunctions = require('./tools/jwtFunctions');
 
-
-
+const home = require('./routes/home');
 
 
 const app = express();
@@ -48,7 +36,46 @@ app.use(session({
 app.use(errorHandler());
 
 
+/* */
 
+
+const rutas = [
+    //Recursos de imagen
+    
+
+    //Rutas de js para iniciar sesión
+    ['/script.js', '../public/js/sesion/sesion.js'],
+    
+
+    //Rutas de css de toda la interfaz
+    ['/style.css', '../public/css/app.css'],
+
+
+];
+
+
+
+rutas.forEach(([rutaEntrada, rutaArchivo]) => {
+    app.get(rutaEntrada, (req, res) => {
+        res.status(200).sendFile(path.join(__dirname, rutaArchivo));
+    });
+});
+
+
+
+app.use('/', express.static('./public/sesion'));
+
+
+/* */
+
+app.post('/login', home.login);
+
+
+
+
+app.get('/not-found', (req, res) => {
+    res.status(404).send('Ruta no encontrada');
+});
 
 app.get('/', (req, res) => {
     res.send('Hello World 2');
