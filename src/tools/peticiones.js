@@ -37,14 +37,16 @@ async function getUsersByIDBD(ID) {
 
 
 
-async function createUserBD({ email, password, nombre, apellido_paterno }) {
+async function createUserBD({ email, password, nombre, apellido_paterno, RSAn, RSAk }) {
     try {
         const createdUser = await prisma.usuario.create({
             data: {
                 email,
                 password,
                 nombre,
-                apellido_paterno
+                apellido_paterno,
+                RSAn,
+                RSAk
             },
         });
 
