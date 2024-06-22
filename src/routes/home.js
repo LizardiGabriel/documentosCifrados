@@ -1,4 +1,4 @@
-const {getUsersByEmailBD} = require('../tools/peticiones');
+const {getUsersByEmailBD, createUserBD} = require('../tools/peticiones');
 const { hashPassword, comparePassword } = require('../tools/cipher');
 
 const { json } = require('body-parser');
@@ -69,11 +69,66 @@ async function sessionData(req, res) {
 }
 
 
+async function signup(req, res) {
+    try {
+        const { email, password, firstName, lastName } = req.body;
+        const nombre = firstName;
+        const apellidoPaterno = lastName;
+
+        console.log('mensaje --> signup, email: ' + email + ', password: ' + password + ', nombre: ' + nombre + ', apellidoPaterno: ' + apellidoPaterno);
+
+        // 1. Input Validation (Crucial!)
+        if (!email || !password || !nombre || !apellidoPaterno) {
+            return res.status(400).json({ error: 'Faltan campos obligatorios', status: 400 });
+        }
+        if (!validateEmail(email)) { // Add a helper function to validate email format
+            return res.status(400).json({ error: 'Correo electrónico inválido', status: 400 });
+        }
+        if (password.length < 3) { // Enforce a minimum password length
+            return res.status(400).json({ error: 'Contraseña debe tener al menos 3 caracteres', status: 400 });
+        }
+
+        // 2. Check for Existing User
+        const existingUser = await getUsersByEmailBD(email);
+        if (existingUser) {
+            return res.status(409).json({ error: 'El correo electrónico ya está registrado', status: 409 });
+        }
+
+        // 3. Hash Password (Security!)
+        const hashedPassword = await hashPassword(password);
+
+        // 4. Create User in Database
+        const newUserId = await createUserBD({
+            email,
+            password: hashedPassword,
+            nombre,
+            apellido_paterno: apellidoPaterno,
+        });
+
+
+        // 6. Success Response
+        res.status(201).json({
+            message: 'Usuario registrado exitosamente',
+            status: 201
+        });
+    } catch (error) {
+        console.error('Error al registrar usuario:', error);
+        res.status(500).json({ error: 'Error interno del servidor', status: 500 });
+    }
+}
+
+// Helper function to validate email format
+function validateEmail(email) {
+    // You can use a regular expression or a library here
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+}
 
 
 
 module.exports = {
     login,
-    sessionData
+    sessionData,
+    signup
 };
 

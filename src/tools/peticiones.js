@@ -37,7 +37,36 @@ async function getUsersByIDBD(ID) {
 
 
 
+async function createUserBD({ email, password, nombre, apellido_paterno }) {
+    try {
+        const createdUser = await prisma.usuario.create({
+            data: {
+                email,
+                password,
+                nombre,
+                apellido_paterno
+            },
+        });
+
+        // After successful creation, return the created user's ID
+        return createdUser.id_usuario;
+    } catch (error) {
+        // Enhanced error handling with Prisma error codes
+        if (error.code === 'P2002') { // Unique constraint violation (e.g., duplicate email)
+            console.error('Error creating user (duplicate email):', error);
+        } else {
+            console.error('Error creating user:', error);
+        }
+
+        // Consider returning an error object with a specific code and message
+        throw new Error('Error creating user');
+    }
+}
+
+
+
 module.exports = {
     getUsersByEmailBD,
     getUsersByIDBD,
+    createUserBD
 };

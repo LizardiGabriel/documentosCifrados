@@ -109,6 +109,7 @@ app.use('/home', async (req, res, next) => {
 
 app.post('/login', home.login);
 // app.use('/invitado/invitacion.html', express.static('./public/build2/views/Invitado/RegistrarInformacionPersonal.html'));
+app.post('/signup', home.signup);
 
 app.use('/home/minutas.html', express.static('./public/home/minutas.html'));
 app.get('/api/sessionData', home.sessionData);
