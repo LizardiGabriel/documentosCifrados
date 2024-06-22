@@ -4,52 +4,95 @@
     <title>Sign Up</title>
 </head>
 <body>
-    <h1>Create an Account</h1>
-    <form id="signupForm">
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required><br><br>
-        <label for="firstName">First Name:</label>
-        <input type="text" id="firstName" name="firstName" required><br><br>
-        <label for="lastName">Last Name:</label>
-        <input type="text" id="lastName" name="lastName" required><br><br>
+<h1>Create an Account</h1>
+<form id="signupForm">
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required><br><br>
+    <label for="firstName">First Name:</label>
+    <input type="text" id="firstName" name="firstName" required><br><br>
+    <label for="lastName">Last Name:</label>
+    <input type="text" id="lastName" name="lastName" required><br><br>
 
-        <label for="password">password:</label>
-        <input type="text" id="password" name="password" required><br><br>
+    <label for="password">password:</label>
+    <input type="text" id="password" name="password" required><br><br>
 
-        <input type="submit" value="Sign Up">
+    <input type="submit" value="Sign Up">
 
 
-    </form>
+</form>
 
-    <script>
-        document.getElementById("signupForm").addEventListener("submit", function(event) {
-            event.preventDefault();
+<script>
+    document.getElementById("signupForm").addEventListener("submit", function (event) {
+        event.preventDefault();
 
-            var form = document.getElementById("signupForm");
-            var formData = new FormData(form);
-            var jsonData = {};
+        var form = document.getElementById("signupForm");
+        var formData = new FormData(form);
+        var jsonData = {};
 
-            for (var pair of formData.entries()) {
-                jsonData[pair[0]] = pair[1];
-            }
+        for (var pair of formData.entries()) {
+            jsonData[pair[0]] = pair[1];
+        }
 
-            fetch("/signup", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(jsonData)
-            })
+        fetch("/signup", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(jsonData)
+        })
             .then(response => response.json())
             .then(data => {
                 console.log("Sign up successful:", data);
+                if (data.status === 201) {
+                    alert("Sign up successful");
+                    // usando Web Crypto API generar llaves secreta de forma local
+                    // llave aes de 32 bytes
+                    // llave publica rsa de 256 bytes
+                    // llave privada rsa de 256 bytes
+                    // gurardar las llaves en un documento de texto y descargarlo en el navegador
+
+                    Promise.all([
+                        // Clave AES de 256 bits (32 bytes)
+                        crypto.subtle.generateKey({name: "AES-GCM", length: 256}, true, ["encrypt", "decrypt"]),
+                        // Claves RSA de 2048 bits (256 bytes)
+                        crypto.subtle.generateKey({
+                            name: "RSA-OAEP",
+                            modulusLength: 2048,
+                            publicExponent: new Uint8Array([1, 0, 1]),
+                            hash: {name: "SHA-256"} // Agregar algoritmo de hash
+                            
+                        }, true, ["encrypt", "decrypt"])
+                    ]).then(([aesKey, rsaKey]) => {
+                        // Exportar claves
+                        Promise.all([
+                            crypto.subtle.exportKey("jwk", aesKey), // JWK para AES
+                            crypto.subtle.exportKey("jwk", rsaKey.publicKey), // JWK para RSA pública
+                            crypto.subtle.exportKey("jwk", rsaKey.privateKey) // JWK para RSA privada
+                        ]).then(([aesJwk, rsaPublicJwk, rsaPrivateJwk]) => {
+                            // Crear contenido del archivo de texto
+                            const fileContent = `AES Key:\n${JSON.stringify(aesJwk)}\n\nRSA Public Key:\n${JSON.stringify(rsaPublicJwk)}\n\nRSA Private Key:\n${JSON.stringify(rsaPrivateJwk)}`;
+
+                            // Crear elemento de descarga
+                            const blob = new Blob([fileContent], {type: "text/plain"});
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url;
+                            a.download = "keys.txt"; // Nombre del archivo
+                            document.body.appendChild(a);
+                            a.click();
+                            URL.revokeObjectURL(url); // Liberar el objeto URL
+                        });
+                    });
+
+
+                }
                 // Handle the response from the server
             })
             .catch(error => {
                 console.error("Error:", error);
                 // Handle any errors that occurred during the request
             });
-        });
-    </script>
+    });
+</script>
 </body>
 </html>
