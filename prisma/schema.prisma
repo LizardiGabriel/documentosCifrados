@@ -36,9 +36,10 @@ model DocumentoUsuario {
   id_documento_usuario Int     @id @default(autoincrement())
   id_documento         Int
   id_usuario           Int
-  status               Int
+  status               Int?
   firma                String?
   fecha_firma          String?
+  owner                Int?
 
   documento Documento @relation(fields: [id_documento], references: [id_documento])
   usuario   Usuario   @relation(fields: [id_usuario], references: [id_usuario])

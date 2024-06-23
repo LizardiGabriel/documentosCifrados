@@ -86,6 +86,9 @@
             console.log('docs in for', docs);
 
             if (docs.length > 0) {
+                // extraer el tipo:
+                console.log('tipo:', tipo);
+
                 // Crear un contenedor para este tipo de documento
                 const typeContainer = document.createElement('div');
                 typeContainer.classList.add('document-type-container');
@@ -118,8 +121,12 @@
                         <p><a href="${doc.url}">Enlace</a></p>
                     `;
 
-                    if (doc.status_personal == 0) {
-                        card.style.backgroundColor = 'lightcoral';
+                    if(tipo === 'tipo1'){
+                        if (doc.status_personal == 0) {
+                            card.style.backgroundColor = 'lightcoral';
+                        }
+                    }else {
+                        card.style.backgroundColor = 'lightblue';
                     }
 
 
@@ -145,12 +152,24 @@
 
                     // añadir el boton para firmar
 
-                    const signButton = document.createElement('button');
-                    signButton.textContent = 'Firmar';
 
-                    signButton.addEventListener('click', () => {
-                        firmarDocumento(doc.id_documento, card, hash);
-                    });
+                        const signButton = document.createElement('button');
+                        signButton.textContent = 'Firmar';
+
+                        signButton.addEventListener('click', () => {
+                            firmarDocumento(doc.id_documento, card, hash);
+                        });
+
+                        if(tipo === 'tipo1'){
+                            if (doc.status_personal === 1) {
+                                signButton.disabled = true;
+                            }
+                        }
+
+                        if (tipo === 'tipo2'){
+                            signButton.style.display = 'none';
+                        }
+                        card.appendChild(signButton);
 
 
                     // ver quienes han firmado el documento
@@ -169,7 +188,11 @@
                         // Inside the loop where you create the firmaDiv:
                         const firmaDiv = document.createElement('div');
                         firmaDiv.classList.add('firmaDiv');
-                        firmaDiv.textContent = `Correo: ${firma.usuario_email} - Verificada: ${resVerify} - Firma: ${firma.firma64}`;
+                        if (tipo === 'tipo1') {
+                            firmaDiv.textContent = `Correo: ${firma.usuario_email} - Verificada: ${resVerify} - Firma: ${firma.firma64}`;
+                        }else{
+                            firmaDiv.textContent = `remitente: ${firma.usuario_email} - Verificada: ${resVerify} - Firma: ${firma.firma64}`;
+                        }
 
                         // Tooltip container
                         const tooltip = document.createElement('div');
@@ -193,7 +216,8 @@
 
                     }
 
-                    card.appendChild(signButton);
+                        card.appendChild(signButton);
+
 
 
                 }
@@ -350,9 +374,6 @@
 
     // Simular un click en el input para abrir el selector de archivos
     fileInput.click();
-
-    // recargar la pagina
-
 
 
 }

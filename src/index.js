@@ -132,6 +132,9 @@ app.get('/api/sessionData', home.sessionData);
 app.get('/api/emails', api.emails);
 
 app.post('/api/CreateMinute', api.CreateMinute);
+app.post('/api/CreateMemorandum', api.CreateMemorandum);
+
+
 app.get('/api/docs', api.docs);
 
 app.post('/api/docs/sign', api.signDoc);

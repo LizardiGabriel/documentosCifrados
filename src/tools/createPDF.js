@@ -71,6 +71,71 @@ async function createPDF(name, meetingTitle, minutesContent, participantes, idUs
 
 }
 
+async function createMemoPDF(name, memoTitle, memoContent, participantes, idUsuario) {
+    try {
+
+        var path = require('path');
+        var htmlPath = path.join(__dirname, 'templateMemoNormal.html');
+        var html = fs.readFileSync(htmlPath, "utf8");
+
+        var options = {
+            format: "A3",
+            orientation: "portrait",
+            border: "10mm",
+            header: {
+                height: "45mm",
+                contents: '<div style="text-align: center;">Author: Shyam Hajare</div>'
+            },
+            footer: {
+                height: "28mm",
+                contents: {
+                    first: 'Cover page',
+                    2: 'Second page', // Any page number is working. 1-based index
+                    default: '<span style="color: #444;">{{page}}</span>/<span>{{pages}}</span>', // fallback value
+                    last: 'Last Page'
+                }
+            }
+        };
+
+        const uid = new ShortUniqueId();
+
+        let path_return = "./public/pdfs/" + uid.rnd() + ".pdf";
+
+        var document = {
+            html: html,
+            data: {
+                participantes: participantes,
+                memoTitle: memoTitle,
+                memoContent: memoContent
+            },
+            path: path_return,
+            type: "pdf",
+        };
+
+        try {
+            const res = await pdf(document, options);
+            console.log(res);
+        } catch (error) {
+            console.error(error);
+        }
+
+
+        console.log("PDF creado");
+        const rutaJSON = await generateBIN(path_return);
+        console.log('rutaJSON con firmas: ', rutaJSON);
+
+        return rutaJSON;
+
+    }
+    catch (err){
+        console.log('error en crear memo pdf: ', err);
+        return -1;
+    }
+
+}
+
+
+
 async function generateBIN(path_return) {
     const pdfPath = path_return;
     const pdfBuffer = fs.readFileSync(pdfPath);
@@ -116,5 +181,6 @@ async function modyfySignatures(path_zen, firma) {
 
 module.exports = {
     createPDF,
-    modyfySignatures
+    modyfySignatures,
+    createMemoPDF
 };

@@ -1,5 +1,5 @@
 const {getAllEmailUsersExceptBD, getUsersByIDBD, createMinuteBD, guardarDocUsuario, getDocsBD} = require('../tools/peticiones');
-const {createPDF, modyfySignatures} = require('../tools/createPDF');
+const {createPDF, modyfySignatures, createMemoPDF} = require('../tools/createPDF');
 
 const fs = require('fs').promises;
 
@@ -102,10 +102,10 @@ async function CreateMinute(req, res) {
         console.log('minutitaId creada: ', minutitaId);
 
 
-        const peticionGuardar1 = await guardarDocUsuario(minutitaId, idUsuario, 0);
+        const peticionGuardar1 = await guardarDocUsuario(minutitaId, idUsuario, 0, 0);
         console.log('peticionGuardar1: ', peticionGuardar1);
         for (let i = 0; i < selectedAttendees.length; i++) {
-            const peticionGuardar = await guardarDocUsuario(minutitaId, selectedAttendees[i], 0);
+            const peticionGuardar = await guardarDocUsuario(minutitaId, selectedAttendees[i], 0, 0);
             console.log('peticionGuardar: ', peticionGuardar);
         }
 
@@ -115,6 +115,77 @@ async function CreateMinute(req, res) {
     } catch (error) {
         console.log(error);
     }
+}
+
+
+async function CreateMemorandum(req, res) {
+    try {
+        const idUsuario = getIdUsuario(req.session.jwt);
+        const {memoTitle, memoContent, selectedAttendees} = req.body;
+
+        let participantes = [];
+
+        const duenio = await getUsersByIDBD(idUsuario);
+        participantes.push({
+            email: duenio.email,
+            nombre: duenio.nombre,
+            apellido_paterno: duenio.apellido_paterno,
+            owner: 1,
+            status: 0
+        });
+
+        for (let i = 0; i < selectedAttendees.length; i++) {
+            const usuario = await getUsersByIDBD(selectedAttendees[i]);
+            participantes.push({
+                email: usuario.email,
+                nombre: usuario.nombre,
+                apellido_paterno: usuario.apellido_paterno,
+                owner: 0,
+                status: 0
+            });
+        }
+
+        const ruta = await createMemoPDF('name', memoTitle, memoContent, participantes, idUsuario);
+        console.log('ruta del pdf: ', ruta);
+
+        const fechaActual = new Date();
+        const fecha =  fechaActual.getFullYear().toString() + "_" + (fechaActual.getMonth() + 1).toString() + "_" +fechaActual.getDate().toString();
+
+
+        const fileContent = await fs.readFile(ruta, 'utf-8');
+        const pdfData = JSON.parse(fileContent);
+        const pdfBuffer = Uint8Array.from(atob(pdfData.pdf), c => c.charCodeAt(0));
+        const arrayBuffer = pdfBuffer.buffer.slice(pdfBuffer.byteOffset, pdfBuffer.byteOffset + pdfBuffer.byteLength);
+        let hash = await generateHash(arrayBuffer);
+        console.log('Hash del pdf: ', hash);
+
+
+        console.log('hash calculado...');
+
+        console.log('fecha para createMemoNormalBD: ', fecha);
+        const memoNormalId = await createMinuteBD(2, ruta, hash, fecha);
+        console.log('memoNormalId creada: ', memoNormalId);
+
+        const peticionGuardar1 = await guardarDocUsuario(memoNormalId, idUsuario, 0, 1);
+        console.log('peticionGuardar1: ', peticionGuardar1);
+        for (let i = 0; i < selectedAttendees.length; i++) {
+            const peticionGuardar = await guardarDocUsuario(memoNormalId, selectedAttendees[i], 0, 0);
+            console.log('peticionGuardar: ', peticionGuardar);
+        }
+
+        res.status(200).json({message: 'Memo normal creado exitosamente', url: ruta, idDocumento: memoNormalId});
+
+
+    }
+    catch (error) {
+        console.log(error);
+        res.status(500).json({message: 'Error al crear el memo normal'});
+    }
+        // console.log('participantes en la minuta: ', participantes);
+
+
+
+
 }
 
 
@@ -278,5 +349,8 @@ module.exports = {
     CreateMinute,
     docs,
     signDoc,
-    getFirmaByIdUsu
+    getFirmaByIdUsu,
+
+
+    CreateMemorandum
 };

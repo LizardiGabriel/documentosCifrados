@@ -113,13 +113,16 @@ async function createMinuteBD(tipo, url, hash, fecha_modificacion) {
     }
 }
 
-async function guardarDocUsuario(idDocumento, idUsuario, status) {
+
+
+async function guardarDocUsuario(idDocumento, idUsuario, status, owner) {
     try {
         const createdDocUser = await prisma.documentoUsuario.create({
             data: {
                 id_documento: Number(idDocumento),
                 id_usuario: Number(idUsuario),
-                status: Number(status)
+                status: Number(status),
+                owner: Number(owner)
             },
         });
 
@@ -258,5 +261,5 @@ module.exports = {
     getDocumentoUsuarioByIds,
     getUrlDocumentoById,
     putSignatureDocumentoUsuario
-    
+
 };
