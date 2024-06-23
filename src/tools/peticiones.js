@@ -37,7 +37,7 @@ async function getUsersByIDBD(ID) {
 
 
 
-async function createUserBD({ email, password, nombre, apellido_paterno, RSAn, RSAk }) {
+async function createUserBD({ email, password, nombre, apellido_paterno, RSApublicKey }) {
     try {
         const createdUser = await prisma.usuario.create({
             data: {
@@ -45,8 +45,8 @@ async function createUserBD({ email, password, nombre, apellido_paterno, RSAn, R
                 password,
                 nombre,
                 apellido_paterno,
-                RSAn,
-                RSAk
+                RSApublicKey
+
             },
         });
 
@@ -80,8 +80,7 @@ async function getAllEmailUsersExceptBD(idUsuario){
                 email: true,
                 nombre: true,
                 apellido_paterno: true,
-                RSAn: true,
-                RSAk: true
+                RSApublicKey: true,
             }
         });
 
@@ -190,6 +189,61 @@ async function getDocsBD(idUsuario) {
     }
 }
 
+async function getDocumentoUsuarioByIds(id_documento, id_usuario) {
+    try {
+        const docUser = await prisma.documentoUsuario.findFirst({
+            where: {
+                id_documento: Number(id_documento),
+                id_usuario: Number(id_usuario)
+            },
+        });
+
+        return docUser;
+    } catch (error) {
+        console.error('Error al obtener documento-usuario por IDs:', error);
+        return null;
+    }
+}
+
+async function getUrlDocumentoById(id_documento) {
+    try {
+        const doc = await prisma.documento.findFirst({
+            where: {
+                id_documento: Number(id_documento),
+            },
+            select: {
+                url: true
+            }
+        });
+
+        return doc.url;
+    } catch (error) {
+        console.error('Error al obtener documento por ID:', error);
+        return null;
+    }
+}
+
+
+async function putSignatureDocumentoUsuario(id_documento_usuario, status, firma, fecha_firma) {
+    try {
+        const updatedDocUser = await prisma.documentoUsuario.update({
+            where: {
+                id_documento_usuario: Number(id_documento_usuario),
+            },
+            data: {
+                status: Number(status),
+                firma,
+                fecha_firma
+            },
+        });
+
+        return updatedDocUser.id_documento_usuario;
+    } catch (error) {
+        console.error('Error updating document-user:', error);
+        throw new Error('Error updating document-user');
+    }
+}
+
 
 
 module.exports = {
@@ -199,5 +253,10 @@ module.exports = {
     getAllEmailUsersExceptBD,
     createMinuteBD,
     guardarDocUsuario,
-    getDocsBD
+    getDocsBD,
+
+    getDocumentoUsuarioByIds,
+    getUrlDocumentoById,
+    putSignatureDocumentoUsuario
+    
 };

@@ -97,6 +97,24 @@ async function generateBIN(path_return) {
 }
 
 
+async function modyfySignatures(path_zen, firma) {
+    try{
+        const fileContent = await fs.promises.readFile(path_zen, 'utf-8');
+        const pdfData = JSON.parse(fileContent);
+        pdfData.firmas = pdfData.firmas.concat(firma);
+
+        const json = JSON.stringify(pdfData);
+        fs.writeFileSync(path_zen, json);
+        return 1;
+    }
+    catch (err){
+        console.log('error en modificar firmas: ', err);
+        return -1;
+    }
+}
+
+
 module.exports = {
-    createPDF
+    createPDF,
+    modyfySignatures
 };

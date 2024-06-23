@@ -23,8 +23,7 @@
 
 <script>
     let keyAux, aesKey;
-    let  rsaKey, privateKey;
-    let n, k, j;
+    let  rsaKey, privateKey, publicKey;
 
     async function generateAesKey() {
         keyAux = await crypto.subtle.generateKey({name: "AES-GCM", length: 256}, true, ["encrypt", "decrypt"]);
@@ -32,39 +31,30 @@
         console.log("Generated AES key:", aesKey.k);
     }
 
-    async function generateRsaKeys() {
-        const keys = await crypto.subtle.generateKey({
-                name: "RSA-OAEP",
-                modulusLength: 2048,
-                hash: { name: "SHA-256" },
-                publicExponent: new Uint8Array([0x01, 0x00, 0x01]), // 65537
-            },
-            true, // Extractable
-            ["encrypt", "decrypt"] // Usages
-        );
+async function generateRsaKeys() {
+    const keys = await crypto.subtle.generateKey(
+        {
+            name: "RSA-PSS",
+            modulusLength: 2048,
+            publicExponent: new Uint8Array([0x01, 0x00, 0x01]), // 65537
+            hash: { name: "SHA-256" },
+        },
+        true, // Extractable
+        ["sign", "verify"] // Usages
+    );
 
-        rsaKey = keys;
-        privateKey = await crypto.subtle.exportKey("jwk", keys.privateKey);
+    rsaKey = keys;
+    privateKey = await crypto.subtle.exportKey("jwk", keys.privateKey);
+    publicKey = await crypto.subtle.exportKey("jwk", keys.publicKey);
 
-        //console.log("Generated RSA keys:", { publicKey, privateKey });
-        console.log("Generated RSA keys:");
-        console.log("n:", privateKey.n);
-        console.log("Clave pública (n, k) k->:", privateKey.e);
-        console.log("Clave privada (n, j) j->:", privateKey.d);
-
-        n = privateKey.n;
-        k = privateKey.e;
-        j = privateKey.d;
-
-
-    }
+    console.log("Generated RSA keys:", { publicKey, privateKey });
+}
 
     function downloadKeys(email) {
         const keys = {
             aesKey: aesKey,
-            n: n,
-            k: k,
-            j: j,
+            rsaPublicKey: publicKey,
+            rsaPrivateKey: privateKey
         };
 
         const blob = new Blob([JSON.stringify(keys, null, 2)], { type: "application/json" });
@@ -91,8 +81,9 @@
         await generateAesKey();
         await generateRsaKeys();
 
-        jsonData["RSAn"] = n;
-        jsonData["RSAk"] = k;
+        const publicKey64 = btoa(JSON.stringify(publicKey));
+        jsonData["RSApublicKey"] = publicKey64;
+
 
 
         console.log("JSON data:", jsonData);

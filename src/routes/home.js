@@ -32,7 +32,7 @@ async function login(req, res) {
             return res.status(401).json({ error: 'Contraseña incorrecta', status: 401});
         }
         
-        const token = generateAccessToken(email, usuario.id_usuario, usuario.nombre, usuario.apellido_paterno, usuario.RSAn, usuario.RSAk);
+        const token = generateAccessToken(email, usuario.id_usuario, usuario.nombre, usuario.apellido_paterno, usuario.RSApublicKey);
         console.log('token: ' + token);
         req.session.jwt = token;
         
@@ -71,13 +71,12 @@ async function sessionData(req, res) {
 
 async function signup(req, res) {
     try {
-        const { email, password, firstName, lastName, RSAn, RSAk } = req.body;
+        const { email, password, firstName, lastName, RSApublicKey } = req.body;
         const nombre = firstName;
         const apellidoPaterno = lastName;
 
         console.log('mensaje --> signup, email: ' + email + ', password: ' + password + ', nombre: ' + nombre + ', apellidoPaterno: ' + apellidoPaterno);
-        console.log('--> rsaPublicKey: n: ' + RSAn);
-        console.log('--> rsaPublicKey: k: ' + RSAk);
+        console.log('--> RSApublicKey: ' + RSApublicKey);
 
         // 1. Input Validation (Crucial!)
         if (!email || !password || !nombre || !apellidoPaterno) {
@@ -105,8 +104,7 @@ async function signup(req, res) {
             password: hashedPassword,
             nombre,
             apellido_paterno: apellidoPaterno,
-            RSAn,
-            RSAk
+            RSApublicKey
         });
 
 

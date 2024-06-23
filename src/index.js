@@ -136,6 +136,8 @@ app.get('/api/docs', api.docs);
 
 app.post('/api/docs/sign', api.signDoc);
 
+app.post('/api/getFirmaByIdUsu', api.getFirmaByIdUsu);
+
 
 app.use('/home/public/docs', (req, res) => {
     console.log('ruta archivo: ', req.path);

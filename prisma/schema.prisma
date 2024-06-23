@@ -19,8 +19,7 @@ model Usuario {
   password         String
   nombre           String
   apellido_paterno String
-  RSAn             String             @db.Text
-  RSAk             String
+  RSApublicKey     String             @db.Text
   DocumentoUsuario DocumentoUsuario[]
 }
 

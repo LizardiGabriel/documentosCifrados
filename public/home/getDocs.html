@@ -36,6 +36,26 @@
             height: 200px;
             overflow: hidden;
         }
+        .document-card .firmaDiv {
+            width: 100%; /* Ensure the div takes full card width */
+            word-wrap: break-word; /* Break long words to fit the line */
+            overflow: hidden;       /* Hide any overflowing text */
+            text-overflow: ellipsis; /* Show ellipsis (...) for cut-off text */
+            white-space: nowrap;    /* Keep text on a single line */
+        }
+
+        .tooltip {
+            position: relative; /* Change position to relative */
+            display: block;     /* Ensure the tooltip is always a block element */
+            width: 100%;       /* Make tooltip take the full width of its container */
+            background-color: #fff;
+            padding: 5px;
+            border: 1px solid #ccc;
+            z-index: 10;
+            word-wrap: break-word; /* Allow long words to break */
+            white-space: normal; /* Allow text to wrap naturally */
+        }
+
     </style>
 </head>
 <body>
@@ -53,6 +73,8 @@
 <script src="https://unpkg.com/pdfobject"></script>
 <script>
     async function getDocs() {
+
+        const myData = await getMyData();
         const response = await fetch('/api/docs');
         const data = await response.json();
 
@@ -112,21 +134,80 @@
                     const blobUrl = URL.createObjectURL(pdfBlob);
                     PDFObject.embed(blobUrl, `#my-pdf-${doc.id_documento}`);
 
+
+                    //
+
+                    const pdfBuffer = Uint8Array.from(atob(pdfData.pdf), c => c.charCodeAt(0));
+                    const arrayBuffer = pdfBuffer.buffer.slice(pdfBuffer.byteOffset, pdfBuffer.byteOffset + pdfBuffer.byteLength);
+                    let hash = await generateHash(arrayBuffer);
+                    console.log('Hash del pdf: ', hash);
+
+
                     // añadir el boton para firmar
 
                     const signButton = document.createElement('button');
                     signButton.textContent = 'Firmar';
 
                     signButton.addEventListener('click', () => {
-                        firmarDocumento(doc.id_documento, card, pdfData);
+                        firmarDocumento(doc.id_documento, card, hash);
                     });
+
+
+                    // ver quienes han firmado el documento
+                    const firmas = pdfData.firmas;
+                    console.log('firmas del documento: id_doc', doc.id_documento);
+                    for (const firma of firmas) {
+                        if (firma.usuario_email === myData.data.email){
+                            card.style.backgroundColor = 'lightgreen';
+                            signButton.disabled = true;
+                        }
+                        const publicKey64 = await getPublicKeyByIdUsuario(firma.id_usuario);
+                        const resVerify = await verifySignature(hash, firma.firma64, publicKey64);
+                        console.log('correo:', firma.usuario_email, 'id_usu:', firma.id_usuario, 'firma', firma.firma64, 'clave publica de usu', firma.id_usuario, publicKey64);
+                        console.log('resVerify:', resVerify);
+
+                        // Inside the loop where you create the firmaDiv:
+                        const firmaDiv = document.createElement('div');
+                        firmaDiv.classList.add('firmaDiv');
+                        firmaDiv.textContent = `Correo: ${firma.usuario_email} - Verificada: ${resVerify} - Firma: ${firma.firma64}`;
+
+                        // Tooltip container
+                        const tooltip = document.createElement('div');
+                        tooltip.classList.add('tooltip'); // Add a class for styling
+                        tooltip.textContent = `Correo: ${firma.usuario_email} - Verificada: ${resVerify} - Firma: ${firma.firma64} `; // Set full signature content
+                        tooltip.style.display = 'none'; // Hide by default
+
+                        // Append tooltip to the firmaDiv
+                        firmaDiv.appendChild(tooltip);
+
+                        // Event listeners for hover (mouseenter and mouseleave)
+                        firmaDiv.addEventListener('mouseenter', () => {
+                            tooltip.style.display = 'block'; // Show tooltip on hover
+                        });
+
+                        firmaDiv.addEventListener('mouseleave', () => {
+                            tooltip.style.display = 'none'; // Hide tooltip on mouseleave
+                        });
+
+                        card.appendChild(firmaDiv);
+
+                    }
 
                     card.appendChild(signButton);
 
 
                 }
+
+
             }
         }
+    }
+
+    async function getMyData() {
+        const response = await fetch('/api/sessionData');
+        const data = await response.json();
+        console.log('sessionData', data);
+        return data;
     }
 
     async function generateHash(arrayBuffer) {
@@ -140,17 +221,48 @@
         return hashHex;
     }
 
+    async function verifySignature(hash, firma64, publicKey64){
 
-    async function firmarDocumento(idDocumento, card, pdfData) {
+        const hashBuffer = new TextEncoder().encode(hash);
+
+        const signatureArray = Array.from(new Uint8Array(atob(firma64).split('').map(c => c.charCodeAt(0))));
+        const signatureBuffer = new Uint8Array(signatureArray).buffer;
+
+        const publicKey = JSON.parse(atob(publicKey64));
+        const publicKeyBuffer = await window.crypto.subtle.importKey(
+            'jwk', // the format of the key
+            publicKey, // the key
+            {   // these are the algorithm options
+                name: 'RSA-PSS',
+                hash: {name: 'SHA-256'}, // or SHA-512
+            },
+            false, // whether the key is extractable (i.e. can be used in exportKey)
+            ['verify'] // can be any combination of "sign" and "verify"
+        );
+
+        const signatureVerification = await window.crypto.subtle.verify(
+            {
+                name: 'RSA-PSS',
+                saltLength: 128, // the length of the salt
+            },
+            publicKeyBuffer, // from generateKey or importKey above
+            signatureBuffer, // ArrayBuffer of the signature
+            hashBuffer // ArrayBuffer of the data
+        );
+
+        //console.log('Verificación de la firma:', signatureVerification);
+
+        return signatureVerification;
+
+    }
+
+
+    async function firmarDocumento(idDocumento, card, hash) {
         // Crear un input de tipo file
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
 
-        // Convertir los datos del PDF a un ArrayBuffer al igual que en Node.js
-        const pdfBuffer = Uint8Array.from(atob(pdfData.pdf), c => c.charCodeAt(0));
-        const arrayBuffer = pdfBuffer.buffer.slice(pdfBuffer.byteOffset, pdfBuffer.byteOffset + pdfBuffer.byteLength);
-
-        let hash = await generateHash(arrayBuffer);
+        // Obtener el hash del PDF
         console.log('Hash del pdf: ', hash);
 
         // Escuchar el evento 'change' del input
@@ -168,13 +280,52 @@
                     console.error('Error al parsear el archivo', error);
                 }
 
-                console.log('jsonData', jsonData);
+                console.log('jsonData.rsaPrivateKey-->', jsonData.rsaPrivateKey);
                 /*
                 *
                 * */
 
+                const rsaPrivateKey = jsonData.rsaPrivateKey;
+                const hashBuffer = new TextEncoder().encode(hash);
+
+                // Import the private key
+                const privateKey = await window.crypto.subtle.importKey(
+                    'jwk', // the format of the input key
+                    rsaPrivateKey, // this is the JWK format key
+                    {   // these are the algorithm options
+                        name: 'RSA-PSS',
+                        hash: {name: 'SHA-256'}, // or SHA-512
+                    },
+                    false, // whether the imported key is extractable (i.e. can be used in exportKey)
+                    ['sign'] // must contain the "sign" usage
+                );
+
+                // Now you can use privateKey with window.crypto.subtle.sign
+                const signatureBuffer = await window.crypto.subtle.sign(
+                    {
+                        name: 'RSA-PSS',
+                        saltLength: 128, // the length of the salt
+                    },
+                    privateKey,
+                    hashBuffer
+                );
+
+                const signatureArray = Array.from(new Uint8Array(signatureBuffer));
+                const signatureHex = signatureArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                console.log('Firma:', signatureHex);
+
+                const signature64 = btoa(String.fromCharCode.apply(null, signatureArray));
+                console.log('Firma en base64:', signature64);
 
 
+
+                // ahora para motivos de pruebas, verifica la firma
+                const publicKey64 = btoa(JSON.stringify(jsonData.rsaPublicKey));
+                const resVerify = await verifySignature(hash, signature64, publicKey64);
+                console.log('resVerify:', resVerify);
+
+
+                // Enviar la firma al servidor
                 const response = await fetch(`/api/docs/sign`, {
                     method: 'POST',
                     headers: {
@@ -182,7 +333,7 @@
                     },
                     body: JSON.stringify({
                         idDocumento: idDocumento,
-                        fileContent: fileContent
+                        firma64: signature64
                     })
                 });
                 const data = await response.json();
@@ -191,6 +342,7 @@
                     console.log('Doc sign response', data);
                     card.style.backgroundColor = 'lightgreen';
                 }
+                location.reload();
             };
 
         reader.readAsText(file); // Leer el archivo como texto
@@ -198,6 +350,9 @@
 
     // Simular un click en el input para abrir el selector de archivos
     fileInput.click();
+
+    // recargar la pagina
+
 
 
 }
@@ -209,6 +364,32 @@
         }
         return byteArray.buffer;
     }
+
+    async function getPublicKeyByIdUsuario(idUsuario) {
+        try {
+            const response = await fetch("/api/getFirmaByIdUsu", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    idUsuario: idUsuario
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const idUsu = await response.json();
+            return idUsu;
+        } catch (error) {
+            console.error("Error al obtener la lista de correos:", error);
+            return [];
+        }
+    }
+
+
 
 
 
