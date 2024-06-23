@@ -146,7 +146,8 @@ async function enviarMinuta() {
         }
 
         const result = await response.json();
-        console.log('Resultado de enviarMinuta:', result);
+        alert('Resultado de enviarMinuta: ' + result);
+        window.location.href = '/home/minutas.html';
     } catch (error) {
         console.error('Error al enviar la minuta:', error);
     }

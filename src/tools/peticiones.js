@@ -95,10 +95,49 @@ async function getAllEmailUsersExceptBD(idUsuario){
 }
 
 
+async function createMinuteBD(tipo, url, hash, fecha_modificacion) {
+    try {
+        const createdMinute = await prisma.documento.create({
+            data: {
+                tipo: Number(tipo),
+                url,
+                hash,
+                fecha_modificacion
+            },
+        });
+
+        // After successful creation, return the created minute's ID
+        return createdMinute.id_documento;
+    } catch (error) {
+        console.error('Error creating minute:', error);
+        throw new Error('Error creating minute');
+    }
+}
+
+async function guardarDocUsuario(idDocumento, idUsuario, status) {
+    try {
+        const createdDocUser = await prisma.documentoUsuario.create({
+            data: {
+                id_documento: Number(idDocumento),
+                id_usuario: Number(idUsuario),
+                status: Number(status)
+            },
+        });
+
+        return createdDocUser.id_documento_usuario;
+    } catch (error) {
+        console.error('Error creating document-user:', error);
+        throw new Error('Error creating document-user');
+    }
+}
+
+
 
 module.exports = {
     getUsersByEmailBD,
     getUsersByIDBD,
     createUserBD,
-    getAllEmailUsersExceptBD
+    getAllEmailUsersExceptBD,
+    createMinuteBD,
+    guardarDocUsuario
 };
