@@ -59,7 +59,7 @@
 
     }
 
-    function downloadKeys() {
+    function downloadKeys(email) {
         const keys = {
             aesKey: aesKey,
             n: n,
@@ -72,7 +72,7 @@
 
         const a = document.createElement("a");
         a.href = url;
-        a.download = "keys.json";
+        a.download = email+"keys.json";
         a.click();
     }
 
@@ -80,7 +80,7 @@
 
     document.getElementById("signupForm").addEventListener("submit", async function (event) {
         event.preventDefault();
-
+        const email = document.getElementById("email").value;
         var form = document.getElementById("signupForm");
         var formData = new FormData(form);
         var jsonData = {};
@@ -116,7 +116,7 @@
                     // llave privada rsa de 256 bytes
                     // gurardar las llaves en un documento de texto y descargarlo en el navegador
 
-                    downloadKeys();
+                    downloadKeys(email);
                 } else {
                     alert("Sign up failed");
 

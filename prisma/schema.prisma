@@ -14,11 +14,33 @@ datasource db {
 }
 
 model Usuario {
-  id_usuario       Int    @id @default(autoincrement())
-  email            String @unique
+  id_usuario       Int                @id @default(autoincrement())
+  email            String             @unique
   password         String
   nombre           String
   apellido_paterno String
-  RSAn             String @db.Text
+  RSAn             String             @db.Text
   RSAk             String
+  DocumentoUsuario DocumentoUsuario[]
+}
+
+model Documento {
+  id_documento       Int                @id @default(autoincrement())
+  tipo               Int
+  url                String
+  hash               String
+  fecha_modificacion String
+  DocumentoUsuario   DocumentoUsuario[]
+}
+
+model DocumentoUsuario {
+  id_documento_usuario Int    @id @default(autoincrement())
+  id_documento         Int
+  id_usuario           Int
+  status               Int
+  firma                String
+  fecha_firma          String
+
+  documento Documento @relation(fields: [id_documento], references: [id_documento])
+  usuario   Usuario   @relation(fields: [id_usuario], references: [id_usuario])
 }

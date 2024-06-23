@@ -14,7 +14,7 @@ require('dotenv').config();
 
 
 const home = require('./routes/home');
-
+const api = require('./routes/api');
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
@@ -51,10 +51,14 @@ const rutas = [
 
     //Rutas de js para iniciar sesión
     ['/script.js', '../public/js/sesion/sesion.js'],
-    
+    ['/home/script.js', '../public/js/home/home.js'],
+
+
+
 
     //Rutas de css de toda la interfaz
     ['/style.css', '../public/css/app.css'],
+    ['/home/style.css', '../public/css/home.css'],
 
 
 ];
@@ -70,20 +74,6 @@ rutas.forEach(([rutaEntrada, rutaArchivo]) => {
 
 
 app.use('/', express.static('./public/sesion'));
-
-// funcion para verificar nada
-function getnewCount(jsonToken) {
-    let newCount = 0;
-    jwt.verify(jsonToken, process.env.SECRET_KEY, (err, decoded) => {
-        if (err) {
-            return -1;
-        } else {
-            newCount = decoded.newCount;
-            console.log('newCount from the function: ' + newCount);
-        }
-    });
-    return newCount;
-}
 
 
 app.use('/home', async (req, res, next) => {
@@ -105,6 +95,25 @@ app.use('/home', async (req, res, next) => {
 }
 );
 
+app.use('/api', async (req, res, next) => {
+        if (req.session.jwt) {
+            const token = req.session.jwt;
+            jwt.verify(token, process.env.SECRET_KEY, (err, data) => {
+                if (err) {
+                    console.log('err verificar home: ' + err);
+                    return res.redirect('/login.html');
+                }
+                res.locals.user = data;
+                console.log('data verificar home: ' + data);
+                next();
+            });
+        } else {
+            console.log('err verificar home: ');
+            res.redirect('/login.html');
+        }
+    }
+);
+
 
 
 app.post('/login', home.login);
@@ -112,9 +121,14 @@ app.post('/login', home.login);
 app.post('/signup', home.signup);
 
 app.use('/home/minutas.html', express.static('./public/home/minutas.html'));
+
+app.use('/home/makedoc.html', express.static('./public/home/makedoc.html'));
+
+
 app.get('/api/sessionData', home.sessionData);
+app.get('/api/emails', api.emails);
 
-
+app.post('/api/CreateMinute', api.CreateMinute);
 
  
 

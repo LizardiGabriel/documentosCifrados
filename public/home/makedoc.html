@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Website</title>
+    <link rel="stylesheet" href="style.css"> </head>
+<body>
+<header>
+    <h1>Make a doc</h1>
+</header>
+<main>
+    <section>
+        <h2>Docs</h2>
+        <input type="checkbox" id="opcion1" name="opcion1" value="minuta">
+        <label for="opcion1">minuta</label><br>
+        <input type="checkbox" id="opcion2" name="opcion2" value="memorandum">
+        <label for="opcion2">memorandum</label><br>
+        <input type="checkbox" id="opcion3" name="opcion3" value="memorandum confidencial">
+        <label for="opcion3"> memorandum confidencial</label><br>
+
+        <button onclick="makeDoc()">Make doc</button>
+
+        <div id="formid"></div>
+
+
+
+    </section>
+
+</main>
+<footer>
+    <p>&copy; 2023 My Website</p>
+</footer>
+<!-- home.js -->
+<script src="script.js"></script>
+<script>
+    function makeDoc() {
+        var opcion1 = document.getElementById("opcion1").checked;
+        var opcion2 = document.getElementById("opcion2").checked;
+        var opcion3 = document.getElementById("opcion3").checked;
+        let opc = 0;
+        var doc = "";
+        if (opcion1) {
+            doc = "minuta";
+            opc = 1;
+        } else if (opcion2) {
+            doc = "memorandum";
+            opc = 2;
+        } else if (opcion3) {
+            doc = "memorandum confidencial";
+            opc = 3;
+        }
+        console.log("Se ha creado un documento de tipo " + doc);
+
+        mostrarForm(opc);
+    }
+</script>
+</body>
+</html>

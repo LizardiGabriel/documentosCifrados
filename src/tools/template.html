@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <mate charest="utf-8" />
+    <title>Minuta</title>
+    <style>
+        /* Aquí puedes agregar estilos CSS para formatear tu PDF */
+    </style>
+</head>
+<body>
+<h1>{{meetingTitle}}</h1>
+<p>{{minutesContent}}</p>
+<h1>User List</h1>
+<ul>
+    {{#each participantes}}
+    <li>email: {{this.email}}</li>
+    <li>nombre: {{this.nombre}}</li>
+    <li>apellido_paterno: {{this.apellido_paterno}}</li>
+    <br />
+    {{/each}}
+</ul>
+</body>
+</html>

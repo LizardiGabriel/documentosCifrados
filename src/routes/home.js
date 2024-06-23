@@ -32,7 +32,7 @@ async function login(req, res) {
             return res.status(401).json({ error: 'Contraseña incorrecta', status: 401});
         }
         
-        const token = generateAccessToken(email, usuario.id_usuario, usuario.nombre, usuario.apellido_paterno);
+        const token = generateAccessToken(email, usuario.id_usuario, usuario.nombre, usuario.apellido_paterno, usuario.RSAn, usuario.RSAk);
         console.log('token: ' + token);
         req.session.jwt = token;
         

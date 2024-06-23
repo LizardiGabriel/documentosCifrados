@@ -25,7 +25,7 @@ async function getUsersByIDBD(ID) {
     try {
         const usuario = await prisma.usuario.findFirst({
             where: {
-                id_usuario: ID,
+                id_usuario: Number(ID),
             },
         });
         return usuario;
@@ -66,9 +66,39 @@ async function createUserBD({ email, password, nombre, apellido_paterno, RSAn, R
 }
 
 
+async function getAllEmailUsersExceptBD(idUsuario){
+    console.log('peticion a la bd de getAllUsers');
+    try {
+        const allUsers = await prisma.usuario.findMany({
+            where: {
+                id_usuario: {
+                    not: Number(idUsuario)
+                }
+            },
+            select: {
+                id_usuario: true,
+                email: true,
+                nombre: true,
+                apellido_paterno: true,
+                RSAn: true,
+                RSAk: true
+            }
+        });
+
+        console.log('allUsers:', allUsers);
+        return allUsers;
+
+    } catch (error) {
+        console.error('Error al obtener todos los usuarios:', error);
+        return null;
+    }
+}
+
+
 
 module.exports = {
     getUsersByEmailBD,
     getUsersByIDBD,
-    createUserBD
+    createUserBD,
+    getAllEmailUsersExceptBD
 };
