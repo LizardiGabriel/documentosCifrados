@@ -52,6 +52,7 @@ const rutas = [
     //Rutas de js para iniciar sesión
     ['/script.js', '../public/js/sesion/sesion.js'],
     ['/home/script.js', '../public/js/home/home.js'],
+    ['/getDocs.js', '../public/js/home/getDocs.js'],
 
 
 
@@ -124,11 +125,24 @@ app.use('/home/minutas.html', express.static('./public/home/minutas.html'));
 
 app.use('/home/makedoc.html', express.static('./public/home/makedoc.html'));
 
+app.use('/home/getDocs.html', express.static('./public/home/getDocs.html'));
+
 
 app.get('/api/sessionData', home.sessionData);
 app.get('/api/emails', api.emails);
 
 app.post('/api/CreateMinute', api.CreateMinute);
+app.get('/api/docs', api.docs);
+
+app.post('/api/docs/sign', api.signDoc);
+
+
+app.use('/home/public/docs', (req, res) => {
+    console.log('ruta archivo: ', req.path);
+    const rutaArchivo = '../public/docs' + req.path;
+    res.status(200).sendFile(path.join(__dirname, rutaArchivo));
+});
+
 
  
 

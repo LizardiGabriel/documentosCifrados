@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Website</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .document-type-container {
+            margin-bottom: 20px;
+        }
+
+        .document-type-container h2 {
+            margin-bottom: 10px;
+        }
+
+        .document-section { /* Estilos para la sección de tarjetas */
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .document-card { /* Estilos para las tarjetas */
+            width: calc(33.33% - 20px);
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .document-card h3 {
+            margin-top: 0;
+        }
+
+        .document-card .pdf-viewer {
+            height: 200px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Mis Documentos</h1>
+</header>
+<main>
+    <section id="documents-container">
+    </section>
+</main>
+<footer>
+    <p>&copy; 2023 My Website</p>
+</footer>
+
+<script src="https://unpkg.com/pdfobject"></script>
+<script>
+    async function getDocs() {
+        const response = await fetch('/api/docs');
+        const data = await response.json();
+
+        const documentsContainer = document.getElementById('documents-container');
+
+        // Iterar sobre los tipos de documentos (tipo1, tipo2, tipo3)
+        for (const tipo in data) {
+            const docs = data[tipo];
+            console.log('docs in for', docs);
+
+            if (docs.length > 0) {
+                // Crear un contenedor para este tipo de documento
+                const typeContainer = document.createElement('div');
+                typeContainer.classList.add('document-type-container');
+
+                // Agregar un título para el tipo de documento
+                const typeTitle = document.createElement('h2');
+                typeTitle.textContent = `Documentos Tipo ${tipo.slice(-1)}`; // Extraer el número del tipo
+                typeContainer.appendChild(typeTitle);
+
+                // Crear una sección para las tarjetas de este tipo
+                const cardsSection = document.createElement('section');
+                cardsSection.classList.add('document-section');
+                typeContainer.appendChild(cardsSection);
+
+                documentsContainer.appendChild(typeContainer);
+
+                // Iterar sobre los documentos de este tipo
+                for (const doc of docs) {
+                    const card = document.createElement('div');
+                    card.classList.add('document-card');
+
+                    const pdfContainer = document.createElement('div');
+                    pdfContainer.id = `my-pdf-${doc.id_documento}`;
+                    pdfContainer.classList.add('pdf-viewer');
+                    card.appendChild(pdfContainer);
+
+
+                    card.innerHTML += `
+                        <h3>ID ${doc.id_documento}</h3>
+                        <p><a href="${doc.url}">Enlace</a></p>
+                    `;
+
+                    if (doc.status_personal == 0) {
+                        card.style.backgroundColor = 'lightcoral';
+                    }
+
+
+
+                    cardsSection.appendChild(card);
+
+                    // Cargar y mostrar el PDF
+                    console.log('doc.url', doc.url);
+                    const pdfResponse = await fetch(doc.url);
+                    const pdfData = await pdfResponse.json();
+                    const pdfBlob = new Blob([Uint8Array.from(atob(pdfData.pdf), c => c.charCodeAt(0))], { type: 'application/pdf' });
+                    const blobUrl = URL.createObjectURL(pdfBlob);
+                    PDFObject.embed(blobUrl, `#my-pdf-${doc.id_documento}`);
+
+                    // añadir el boton para firmar
+
+                    const signButton = document.createElement('button');
+                    signButton.textContent = 'Firmar';
+
+                    signButton.addEventListener('click', () => {
+                        firmarDocumento(doc.id_documento, card, pdfData);
+                    });
+
+                    card.appendChild(signButton);
+
+
+                }
+            }
+        }
+    }
+
+    async function generateHash(arrayBuffer) {
+        // Generar el hash
+        const hashBuffer = await window.crypto.subtle.digest('SHA-256', arrayBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer)); // Convertir el hash a un array de bytes
+
+        // Convertir el hash a una cadena hexadecimal
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+        return hashHex;
+    }
+
+
+    async function firmarDocumento(idDocumento, card, pdfData) {
+        // Crear un input de tipo file
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+
+        // Convertir los datos del PDF a un ArrayBuffer al igual que en Node.js
+        const pdfBuffer = Uint8Array.from(atob(pdfData.pdf), c => c.charCodeAt(0));
+        const arrayBuffer = pdfBuffer.buffer.slice(pdfBuffer.byteOffset, pdfBuffer.byteOffset + pdfBuffer.byteLength);
+
+        let hash = await generateHash(arrayBuffer);
+        console.log('Hash del pdf: ', hash);
+
+        // Escuchar el evento 'change' del input
+        fileInput.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+
+            reader.onload = async (event) => {
+                // El contenido del archivo está en event.target.result
+                const fileContent = event.target.result;
+                let jsonData;
+                try {
+                    jsonData = JSON.parse(fileContent);
+                } catch (error) {
+                    console.error('Error al parsear el archivo', error);
+                }
+
+                console.log('jsonData', jsonData);
+                /*
+                *
+                * */
+
+
+
+                const response = await fetch(`/api/docs/sign`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        idDocumento: idDocumento,
+                        fileContent: fileContent
+                    })
+                });
+                const data = await response.json();
+
+                if (data.message === 'ok') {
+                    console.log('Doc sign response', data);
+                    card.style.backgroundColor = 'lightgreen';
+                }
+            };
+
+        reader.readAsText(file); // Leer el archivo como texto
+    });
+
+    // Simular un click en el input para abrir el selector de archivos
+    fileInput.click();
+
+
+}
+
+    function hexStringToArrayBuffer(hexString) {
+        const byteArray = new Uint8Array(hexString.length / 2);
+        for (let i = 0; i < hexString.length; i += 2) {
+            byteArray[i / 2] = parseInt(hexString.substr(i, 2), 16);
+        }
+        return byteArray.buffer;
+    }
+
+
+
+    getDocs();
+</script>
+</body>
+</html>

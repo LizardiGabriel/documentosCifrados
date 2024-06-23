@@ -1,5 +1,7 @@
-const {getAllEmailUsersExceptBD, getUsersByIDBD, createMinuteBD, guardarDocUsuario} = require('../tools/peticiones');
+const {getAllEmailUsersExceptBD, getUsersByIDBD, createMinuteBD, guardarDocUsuario, getDocsBD} = require('../tools/peticiones');
 const {createPDF} = require('../tools/createPDF');
+
+const crypto = require('crypto');
 
 
 const { json } = require('body-parser');
@@ -76,16 +78,15 @@ async function CreateMinute(req, res) {
         const fecha =  fechaActual.getFullYear().toString() + "_" + (fechaActual.getMonth() + 1).toString() + "_" +fechaActual.getDate().toString();
 
         const pdfBuffer = Buffer.from(ruta);
-        let hashHex = '';
-        try {
-            hashHex = await hashDocument(pdfBuffer);
-            console.log('Hash del documento:', hashHex);
-        } catch (error) {
-            console.error('Error al calcular el hash:', error);
-        }
+        const arrayBuffer = pdfBuffer.buffer.slice(pdfBuffer.byteOffset, pdfBuffer.byteOffset + pdfBuffer.byteLength);
+        const hash = await generateHash(arrayBuffer);
+        console.log('hash generateHash: ', hash);
+
+
+        console.log('hash calculado...');
 
         console.log('fecha para createMinuteBD: ', fecha);
-        const minutitaId = await createMinuteBD(1, ruta, hashHex, fecha);
+        const minutitaId = await createMinuteBD(1, ruta, hash, fecha);
         console.log('minutitaId creada: ', minutitaId);
 
 
@@ -97,34 +98,54 @@ async function CreateMinute(req, res) {
         }
 
         res.status(200).json({message: 'Minuta creada exitosamente'});
-        
+
 
     } catch (error) {
         console.log(error);
     }
 }
 
-async function hashDocument(pdfBuffer) {
+
+function generateHash(arrayBuffer) {
+    const hash = crypto.createHash('sha256');
+    hash.update(Buffer.from(arrayBuffer));
+    const hashHex = hash.digest('hex');
+
+    return hashHex;
+}
+
+
+async function docs(req, res) {
     try {
-        // 1. Convertir el buffer a ArrayBuffer
-        const arrayBuffer = pdfBuffer.buffer.slice(
-            pdfBuffer.byteOffset,
-            pdfBuffer.byteOffset + pdfBuffer.byteLength
-        );
+        const idUsuario = getIdUsuario(req.session.jwt);
+        console.log('-->idUsuario: ' + idUsuario);
 
-        // 2. Calcular el hash utilizando SHA-256
-        const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+        const docsSend = await getDocsBD(idUsuario);
 
-        // 3. Convertir el hash a formato hexadecimal
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hexHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-        return hexHash;
-    } catch (error) {
-        console.error('Error al calcular el hash:', error);
-        throw error; // Propagar el error para manejarlo adecuadamente
+        res.status(200).json(docsSend);
+    }
+    catch (error) {
+        console.log(error);
     }
 }
+
+
+async function signDoc(req, res) {
+    try {
+        const idUsuario = getIdUsuario(req.session.jwt);
+        console.log('-->idUsuario: ' + idUsuario);
+        const {idDocumento} = req.body;
+
+
+
+        res.status(200).json({message: 'ok'});
+
+    }
+    catch (error) {
+        console.log(error);
+    }
+}
+
 
 
 
@@ -132,5 +153,7 @@ async function hashDocument(pdfBuffer) {
 
 module.exports = {
     emails,
-    CreateMinute
+    CreateMinute,
+    docs,
+    signDoc
 };

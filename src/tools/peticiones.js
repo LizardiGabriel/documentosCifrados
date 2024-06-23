@@ -132,6 +132,65 @@ async function guardarDocUsuario(idDocumento, idUsuario, status) {
 }
 
 
+async function getDocsBD(idUsuario) {
+    console.log('peticion a la bd de getDocsBD');
+    try {
+        const docs = await prisma.documentoUsuario.findMany({
+            where: {
+                id_usuario: Number(idUsuario),
+            },
+            select: {
+                id_documento: true,
+                status: true,
+                documento: {
+                    select: {
+                        url: true,
+                        hash: true,
+                        fecha_modificacion: true,
+                        tipo: true
+                    }
+                }
+            }
+        });
+
+        const result = docs.map(doc => {
+            return {
+                id_documento: doc.id_documento,
+                status_personal: doc.status,
+                url: doc.documento.url,
+                hash: doc.documento.hash,
+                fecha_modificacion: doc.documento.fecha_modificacion,
+                tipo: doc.documento.tipo
+            };
+        });
+
+
+
+        const tipo1 = result.filter(doc => doc.tipo === 1);
+        const tipo2 = result.filter(doc => doc.tipo === 2);
+        const tipo3 = result.filter(doc => doc.tipo === 3);
+
+        const resultRet = {
+            tipo1: tipo1,
+            tipo2: tipo2,
+            tipo3: tipo3
+        };
+
+
+        console.log('resultRet:', resultRet);
+
+
+        // Devolver el objeto JSON
+        return resultRet;
+
+
+    } catch (error) {
+        console.error('Error al obtener todos los documentos:', error);
+        return null;
+    }
+}
+
+
 
 module.exports = {
     getUsersByEmailBD,
@@ -139,5 +198,6 @@ module.exports = {
     createUserBD,
     getAllEmailUsersExceptBD,
     createMinuteBD,
-    guardarDocUsuario
+    guardarDocUsuario,
+    getDocsBD
 };
