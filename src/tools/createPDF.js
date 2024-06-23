@@ -1,5 +1,8 @@
 var pdf = require("pdf-node");
 var fs = require("fs");
+const path = require('path');
+
+
 const ShortUniqueId = require('short-unique-id');
 
 
@@ -33,7 +36,7 @@ async function createPDF(name, meetingTitle, minutesContent, participantes, idUs
 
         const uid = new ShortUniqueId();
 
-        let path_return = "./public/uploads/"+uid.rnd()+".pdf";
+        let path_return = "./public/pdfs/"+uid.rnd()+".pdf";
 
         var document = {
             html: html,
@@ -46,18 +49,19 @@ async function createPDF(name, meetingTitle, minutesContent, participantes, idUs
             type: "pdf",
         };
 
-        pdf(document, options)
-            .then((res) => {
-                console.log(res);
-            })
-            .catch((error) => {
-                console.error(error);
-            });
-
+        try {
+            const res = await pdf(document, options);
+            console.log(res);
+        } catch (error) {
+            console.error(error);
+        }
 
 
         console.log("PDF creado");
-        return path_return;
+        const rutaJSON = await generateBIN(path_return);
+        console.log('rutaJSON con firmas: ', rutaJSON);
+
+        return rutaJSON;
     }
     catch (err){
         console.log('error en crear pdf: ', err);
@@ -66,6 +70,32 @@ async function createPDF(name, meetingTitle, minutesContent, participantes, idUs
 
 
 }
+
+async function generateBIN(path_return) {
+    const pdfPath = path_return;
+    const pdfBuffer = fs.readFileSync(pdfPath);
+    const pdfBase64 = pdfBuffer.toString('base64');
+
+// 2. Crear un objeto que contenga el PDF en Base64 y el arreglo de firmas
+    const firmas = []; // Reemplaza esto con tu arreglo de firmas
+    const data = {
+        pdf: pdfBase64,
+        firmas: firmas
+    };
+
+// 3. Convertir ese objeto a JSON
+    const json = JSON.stringify(data);
+
+// 4. Guardar el JSON en un archivo con la extensión ".zjf
+    const uid = new ShortUniqueId();
+    let path2 = "./public/docs/"+uid.rnd()+".zen";
+
+    fs.writeFileSync(path2, json);
+
+    return path2;
+
+}
+
 
 module.exports = {
     createPDF
