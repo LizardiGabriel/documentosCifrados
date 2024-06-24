@@ -3,6 +3,7 @@
 .idea
 
 prisma/migrations
+public/docs
 
 
 # Created by https://www.toptal.com/developers/gitignore/api/node
