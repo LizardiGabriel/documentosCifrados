@@ -25,6 +25,8 @@
     let keyAux, aesKey;
     let  rsaKey, privateKey, publicKey;
 
+    let rsaOAEPKey, rsaOAEPprivateKey, rsaOAEPpublicKey;
+
     async function generateAesKey() {
         keyAux = await crypto.subtle.generateKey({name: "AES-GCM", length: 256}, true, ["encrypt", "decrypt"]);
         aesKey = await crypto.subtle.exportKey("jwk", keyAux);
@@ -43,18 +45,37 @@ async function generateRsaKeys() {
         ["sign", "verify"] // Usages
     );
 
+
     rsaKey = keys;
     privateKey = await crypto.subtle.exportKey("jwk", keys.privateKey);
     publicKey = await crypto.subtle.exportKey("jwk", keys.publicKey);
 
     console.log("Generated RSA keys:", { publicKey, privateKey });
+
+    const rsaOAEPkeys = await crypto.subtle.generateKey(
+        {
+            name: "RSA-OAEP",
+            modulusLength: 2048,
+            publicExponent: new Uint8Array([0x01, 0x00, 0x01]), // 65537
+            hash: { name: "SHA-256" },
+        },
+        true, // Extractable
+        ["encrypt", "decrypt"] // Usages
+    );
+    rsaOAEPKey = rsaOAEPkeys;
+    rsaOAEPprivateKey = await crypto.subtle.exportKey("jwk", rsaOAEPkeys.privateKey);
+    rsaOAEPpublicKey = await crypto.subtle.exportKey("jwk", rsaOAEPkeys.publicKey);
+
 }
 
     function downloadKeys(email) {
         const keys = {
             aesKey: aesKey,
             rsaPublicKey: publicKey,
-            rsaPrivateKey: privateKey
+            rsaPrivateKey: privateKey,
+            rsaOAEPpublicKey: rsaOAEPpublicKey,
+            rsaOAEPprivateKey: rsaOAEPprivateKey
+
         };
 
         const blob = new Blob([JSON.stringify(keys, null, 2)], { type: "application/json" });
@@ -83,6 +104,9 @@ async function generateRsaKeys() {
 
         const publicKey64 = btoa(JSON.stringify(publicKey));
         jsonData["RSApublicKey"] = publicKey64;
+        const rsaOAEPpublicKey64 = btoa(JSON.stringify(rsaOAEPpublicKey));
+        jsonData["RSAOAEPpublicKey"] = rsaOAEPpublicKey64;
+
 
 
 

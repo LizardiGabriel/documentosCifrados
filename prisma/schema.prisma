@@ -20,6 +20,7 @@ model Usuario {
   nombre           String
   apellido_paterno String
   RSApublicKey     String             @db.Text
+  RSAOAEPpublicKey String?            @db.Text
   DocumentoUsuario DocumentoUsuario[]
 }
 

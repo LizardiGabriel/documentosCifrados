@@ -71,6 +71,17 @@ async function createPDF(name, meetingTitle, minutesContent, participantes, idUs
 
 }
 
+async function crearBin(path2, json){
+    try{
+        fs.writeFileSync(path2, json);
+        return 1;
+    }
+    catch (err) {
+        console.log('error en crear bin: ', err);
+        return -1;
+    }
+}
+
 async function createMemoPDF(name, memoTitle, memoContent, participantes, idUsuario) {
     try {
 
@@ -182,5 +193,6 @@ async function modyfySignatures(path_zen, firma) {
 module.exports = {
     createPDF,
     modyfySignatures,
-    createMemoPDF
+    createMemoPDF,
+    crearBin
 };

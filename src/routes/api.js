@@ -1,7 +1,8 @@
 const {getAllEmailUsersExceptBD, getUsersByIDBD, createMinuteBD, guardarDocUsuario, getDocsBD} = require('../tools/peticiones');
-const {createPDF, modyfySignatures, createMemoPDF} = require('../tools/createPDF');
+const {createPDF, modyfySignatures, createMemoPDF, crearBin} = require('../tools/createPDF');
 
 const fs = require('fs').promises;
+
 
 const {getDocumentoUsuarioByIds,
     getUrlDocumentoById,
@@ -13,6 +14,7 @@ const crypto = require('crypto');
 const { json } = require('body-parser');
 const { stat } = require('fs');
 const jwt = require('jsonwebtoken');
+const ShortUniqueId = require("short-unique-id");
 require('dotenv').config();
 
 
@@ -28,6 +30,20 @@ function getIdUsuario(jsonToken) {
         }
     });
     return idUsuario;
+}
+// funcion para verificar el id_usuario del token
+function getEmail(jsonToken) {
+    let email = '';
+    jwt.verify(jsonToken, process.env.SECRET_KEY, (err, decoded) => {
+        if (err) {
+            return -1;
+        } else {
+            email = decoded.email;
+            console.log('email: ' + email);
+        }
+    });
+    return email;
+
 }
 
 
@@ -339,6 +355,82 @@ async function hexStringToArrayBuffer(hexString) {
 }
 
 
+async function sendConfidentialMemo(req, res){
+    try {
+        console.log('---> sendConfidentialMemo');
+        const idUsuario = getIdUsuario(req.session.jwt);
+        const email_my = getEmail(req.session.jwt);
+        const {pdf, firma, correos, ids, arr_correos} = req.body;
+
+        console.log('pdf: ', pdf);
+        console.log('firma: ', firma);
+        console.log('correos: ', correos);
+        console.log('ids: ', ids);
+        console.log('arr_correos: ', arr_correos);
+
+        const firmita = {
+            firma64: firma,
+            usuario_email: email_my,
+            id_documento_usuario: 0,
+            id_usuario: idUsuario
+        };
+
+
+        // hacer el .zen del pdf
+
+        const data = {
+            pdf: pdf,
+            firmas: [firmita],
+            correos: correos,
+            arr_correos: arr_correos
+
+        };
+
+        const json = JSON.stringify(data);
+
+        const uid = new ShortUniqueId();
+        let path2 = "./public/docs/"+uid.rnd()+".zen";
+
+        const crearZenFile = await crearBin(path2, json);
+        if(crearZenFile === -1){
+            res.status(500).json({message: 'Error al crear el archivo .zen'});
+        }
+
+        // path 2 es la ruta del .zen
+
+        const fechaActual = new Date();
+        const fecha =  fechaActual.getFullYear().toString() + "_" + (fechaActual.getMonth() + 1).toString() + "_" +fechaActual.getDate().toString();
+
+
+        const pdfBuffer = Uint8Array.from(atob(pdf), c => c.charCodeAt(0));
+        const arrayBuffer = pdfBuffer.buffer.slice(pdfBuffer.byteOffset, pdfBuffer.byteOffset + pdfBuffer.byteLength);
+        let hash = await generateHash(arrayBuffer);
+        console.log('Hash del pdf: ', hash);
+        console.log('hash calculado...');
+
+        console.log('fecha para createMemoNormalBD: ', fecha);
+        const memoConfilId = await createMinuteBD(3, path2, 'hash', fecha);
+        console.log('memoNormalId creada: ', memoConfilId);
+
+
+        for (let i = 0; i < ids.length; i++) {
+            const peticionGuardar = await guardarDocUsuario(memoConfilId, Number(ids[i]), 0, 0);
+            console.log('peticionGuardar: ', peticionGuardar);
+        }
+
+        res.status(200).json({message: 'Memo normal creado exitosamente', url: path2, idDocumento: memoConfilId});
+
+
+    }
+    catch (error) {
+        console.log(error);
+        res.status(500).json({message: 'Error al crear el memo normal'});
+    }
+
+
+}
+
+
 
 
 
@@ -352,5 +444,6 @@ module.exports = {
     getFirmaByIdUsu,
 
 
-    CreateMemorandum
+    CreateMemorandum,
+    sendConfidentialMemo
 };

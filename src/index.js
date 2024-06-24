@@ -133,6 +133,7 @@ app.get('/api/emails', api.emails);
 
 app.post('/api/CreateMinute', api.CreateMinute);
 app.post('/api/CreateMemorandum', api.CreateMemorandum);
+app.post('/api/docs/sendConfidentialMemo', api.sendConfidentialMemo);
 
 
 app.get('/api/docs', api.docs);

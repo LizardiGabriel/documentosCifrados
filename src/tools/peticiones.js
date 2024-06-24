@@ -37,7 +37,7 @@ async function getUsersByIDBD(ID) {
 
 
 
-async function createUserBD({ email, password, nombre, apellido_paterno, RSApublicKey }) {
+async function createUserBD({ email, password, nombre, apellido_paterno, RSApublicKey, RSAOAEPpublicKey }) {
     try {
         const createdUser = await prisma.usuario.create({
             data: {
@@ -45,7 +45,8 @@ async function createUserBD({ email, password, nombre, apellido_paterno, RSApubl
                 password,
                 nombre,
                 apellido_paterno,
-                RSApublicKey
+                RSApublicKey,
+                RSAOAEPpublicKey
 
             },
         });
@@ -81,6 +82,7 @@ async function getAllEmailUsersExceptBD(idUsuario){
                 nombre: true,
                 apellido_paterno: true,
                 RSApublicKey: true,
+                RSAOAEPpublicKey: true
             }
         });
 

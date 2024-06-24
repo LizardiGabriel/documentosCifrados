@@ -6,8 +6,8 @@ const { stat } = require('fs');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
-function generateAccessToken(email, idUsuario, nombre, apellido) {
-    return jwt.sign({ email: email, idUsuario: idUsuario, nombre: nombre, apellido: apellido }, process.env.SECRET_KEY, { expiresIn: '20m' });
+function generateAccessToken(email, idUsuario, nombre, apellido, rsaAOAEPpublicKey) {
+    return jwt.sign({ email: email, idUsuario: idUsuario, nombre: nombre, apellido: apellido, rsaAOAEPpublicKey: rsaAOAEPpublicKey }, process.env.SECRET_KEY, { expiresIn: '20m' });
 }
 
 
@@ -32,7 +32,7 @@ async function login(req, res) {
             return res.status(401).json({ error: 'Contraseña incorrecta', status: 401});
         }
         
-        const token = generateAccessToken(email, usuario.id_usuario, usuario.nombre, usuario.apellido_paterno, usuario.RSApublicKey);
+        const token = generateAccessToken(email, usuario.id_usuario, usuario.nombre, usuario.apellido_paterno, usuario.RSAOAEPpublicKey);
         console.log('token: ' + token);
         req.session.jwt = token;
         
@@ -71,12 +71,13 @@ async function sessionData(req, res) {
 
 async function signup(req, res) {
     try {
-        const { email, password, firstName, lastName, RSApublicKey } = req.body;
+        const { email, password, firstName, lastName, RSApublicKey, RSAOAEPpublicKey } = req.body;
         const nombre = firstName;
         const apellidoPaterno = lastName;
 
         console.log('mensaje --> signup, email: ' + email + ', password: ' + password + ', nombre: ' + nombre + ', apellidoPaterno: ' + apellidoPaterno);
         console.log('--> RSApublicKey: ' + RSApublicKey);
+        console.log('--> RSAOAEPpublicKey: ' + RSAOAEPpublicKey);
 
         // 1. Input Validation (Crucial!)
         if (!email || !password || !nombre || !apellidoPaterno) {
@@ -104,7 +105,8 @@ async function signup(req, res) {
             password: hashedPassword,
             nombre,
             apellido_paterno: apellidoPaterno,
-            RSApublicKey
+            RSApublicKey,
+            RSAOAEPpublicKey
         });
 
 
