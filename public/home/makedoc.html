@@ -690,6 +690,11 @@
                     const encryptedBase64 = btoa(String.fromCharCode.apply(null, encryptedArray));
                     console.log('encryptedBase64:', encryptedBase64);
 
+                    const ivAndEncryptedData = {
+                        iv: btoa(String.fromCharCode.apply(null, Array.from(iv))),
+                        data: encryptedBase64
+                    };
+
                     // cifrar la contraseña con la llave publica RSA de los destinatarios
 
                     const arrayEmail_RSAOAEPpublicKey = [];
@@ -728,7 +733,10 @@
 
                         console.log('aesKey.k:', aesKey.k);
 
-                        const keyBuffer = new TextEncoder().encode(aesKey.k);
+                        const aesKeyString = JSON.stringify(aesKey);
+                        // Codificar la cadena JSON en un ArrayBuffer
+                        const keyBuffer = new TextEncoder().encode(aesKeyString);
+
 
 
                         const encryptedKey = await window.crypto.subtle.encrypt(
@@ -757,7 +765,7 @@
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            pdf: encryptedBase64,
+                            pdf: ivAndEncryptedData,
                             firma: signature64,
                             arr_correos: arr_Email_EKB64,
                             correos: selectedEmails,

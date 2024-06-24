@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>My Website</title>
-    <link rel="stylesheet" href="/style.css">
+    <link href="/style.css" rel="stylesheet">
     <style>
         .document-type-container {
             margin-bottom: 20px;
@@ -36,18 +36,19 @@
             height: 200px;
             overflow: hidden;
         }
+
         .document-card .firmaDiv {
             width: 100%; /* Ensure the div takes full card width */
             word-wrap: break-word; /* Break long words to fit the line */
-            overflow: hidden;       /* Hide any overflowing text */
+            overflow: hidden; /* Hide any overflowing text */
             text-overflow: ellipsis; /* Show ellipsis (...) for cut-off text */
-            white-space: nowrap;    /* Keep text on a single line */
+            white-space: nowrap; /* Keep text on a single line */
         }
 
         .tooltip {
             position: relative; /* Change position to relative */
-            display: block;     /* Ensure the tooltip is always a block element */
-            width: 100%;       /* Make tooltip take the full width of its container */
+            display: block; /* Ensure the tooltip is always a block element */
+            width: 100%; /* Make tooltip take the full width of its container */
             background-color: #fff;
             padding: 5px;
             border: 1px solid #ccc;
@@ -72,6 +73,162 @@
 
 <script src="https://unpkg.com/pdfobject"></script>
 <script>
+    async function descifrar(myPassword64, arrayBufferDec, doc, iv, firma, card) {
+        console.log('descifrar');
+        console.log('descifrarfun --> myPassword64', myPassword64);
+        console.log('descifrarfun --> arrayBufferDec', arrayBufferDec);
+        console.log('descifrarfun --> doc.id_documento', doc.id_documento);
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+
+        // Escuchar el evento 'change' del input
+        fileInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = async (event) => {
+
+                const fileContent = event.target.result;
+                let jsonData;
+                try {
+                    jsonData = JSON.parse(fileContent);
+                } catch (error) {
+                    console.error('Error al parsear el archivo', error);
+                }
+
+                const rsaOAEPprivateKey = jsonData.rsaOAEPprivateKey;
+                console.log('jsonData.rsaOAEPprivateKey-->', rsaOAEPprivateKey);
+
+                const privateKeyBuffer = await window.crypto.subtle.importKey(
+                    'jwk',
+                    rsaOAEPprivateKey,
+                    {
+                        name: 'RSA-OAEP',
+                        hash: {name: 'SHA-256'}
+                    },
+                    false,
+                    ['decrypt']
+                );
+
+                // 2. Decodificar la clave AES cifrada desde Base64
+                const encryptedKeyArrayBuffer = Uint8Array.from(atob(myPassword64), c => c.charCodeAt(0));
+
+                // 3. Descifrar la clave AES
+                const decryptedKeyBuffer = await window.crypto.subtle.decrypt(
+                    {
+                        name: 'RSA-OAEP'
+                    },
+                    privateKeyBuffer,
+                    encryptedKeyArrayBuffer
+                );
+
+                // 4. Convertir el ArrayBuffer a una cadena de texto y luego analizar como JSON
+                const decryptedKeyString = new TextDecoder().decode(decryptedKeyBuffer);  // Conversión a string
+                const decryptedAESKey = JSON.parse(decryptedKeyString);  // Análisis JSON
+
+                console.log('Clave AES descifrada:', decryptedAESKey);
+
+
+                // 5. Crear un objeto CryptoKey a partir de la clave descifrada
+                const aesKey = await window.crypto.subtle.importKey(
+                    'jwk',
+                    decryptedAESKey,
+                    {
+                        name: 'AES-GCM'
+                    },
+                    true,
+                    ['decrypt']
+                );
+
+                //const iv2 = Uint8Array.from(atob(iv), c => c.charCodeAt(0));
+
+                const algorithm = {
+                    name: 'AES-GCM',
+                    iv: iv
+                };
+
+                const key = await window.crypto.subtle.importKey(
+                    'jwk',
+                    decryptedAESKey,
+                    algorithm,
+                    false,
+                    ['decrypt']
+                );
+
+
+                const decryptedData = await window.crypto.subtle.decrypt(
+                    algorithm,
+                    key,
+                    arrayBufferDec
+                );
+
+                const decryptedBase64String = new TextDecoder().decode(decryptedData);
+
+                console.log('decryptedBase64String', decryptedBase64String);
+
+                const decryptedArrayBuffer = Uint8Array.from(atob(decryptedBase64String), c => c.charCodeAt(0));
+                const decryptedBlob = new Blob([decryptedArrayBuffer], {type: 'application/pdf'});
+                const decryptedBlobUrl = URL.createObjectURL(decryptedBlob);
+
+                const pdfContainer = document.getElementById(`my-pdf-${doc.id_documento}`);
+                pdfContainer.innerHTML = '';
+                PDFObject.embed(decryptedBlobUrl, `#my-pdf-${doc.id_documento}`);
+
+
+                let hash;
+                hash = await generateHash(decryptedArrayBuffer);
+                console.log('Hash del pdf desencriptado: ', hash);
+
+                const publicKey64 = await getPublicKeyByIdUsuario(firma.id_usuario);
+                let resVerify;
+                resVerify = await verifySignature(hash, firma.firma64, publicKey64);
+                console.log('correo:', firma.usuario_email, 'id_usu:', firma.id_usuario, 'firma', firma.firma64, 'clave publica de usu', firma.id_usuario, publicKey64);
+                console.log('resVerify doc cifrado:', resVerify);
+
+                // Inside the loop where you create the firmaDiv:
+                const firmaDiv = document.createElement('div');
+                firmaDiv.classList.add('firmaDiv');
+
+                firmaDiv.textContent = `Correo: ${firma.usuario_email} - Verificada: ${resVerify} - Firma: ${firma.firma64}`;
+
+                // Tooltip container
+                const tooltip = document.createElement('div');
+                tooltip.classList.add('tooltip'); // Add a class for styling
+                tooltip.textContent = `Correo: ${firma.usuario_email} - Verificada: ${resVerify} - Firma: ${firma.firma64} `; // Set full signature content
+                tooltip.style.display = 'none'; // Hide by default
+
+                // Append tooltip to the firmaDiv
+                firmaDiv.appendChild(tooltip);
+
+                // Event listeners for hover (mouseenter and mouseleave)
+                firmaDiv.addEventListener('mouseenter', () => {
+                    tooltip.style.display = 'block'; // Show tooltip on hover
+                });
+
+                firmaDiv.addEventListener('mouseleave', () => {
+                    tooltip.style.display = 'none'; // Hide tooltip on mouseleave
+                });
+
+                card.appendChild(firmaDiv);
+
+
+
+
+
+
+
+
+            };
+
+            reader.readAsText(file); // Leer el archivo como texto
+        });
+
+        // Simular un click en el input para abrir el selector de archivos
+        fileInput.click();
+
+
+    }
+
     async function getDocs() {
 
         const myData = await getMyData();
@@ -121,14 +278,13 @@
                         <p><a href="${doc.url}">Enlace</a></p>
                     `;
 
-                    if(tipo === 'tipo1'){
+                    if (tipo === 'tipo1') {
                         if (doc.status_personal == 0) {
                             card.style.backgroundColor = 'lightcoral';
                         }
-                    }else {
+                    } else {
                         card.style.backgroundColor = 'lightblue';
                     }
-
 
 
                     cardsSection.appendChild(card);
@@ -137,87 +293,147 @@
                     console.log('doc.url', doc.url);
                     const pdfResponse = await fetch(doc.url);
                     const pdfData = await pdfResponse.json();
-                    const pdfBlob = new Blob([Uint8Array.from(atob(pdfData.pdf), c => c.charCodeAt(0))], { type: 'application/pdf' });
-                    const blobUrl = URL.createObjectURL(pdfBlob);
+
+                    let pdfBlob;
+                    let blobUrl;
+
+                    if (tipo === 'tipo1' || tipo === 'tipo2') {
+                        pdfBlob = new Blob([Uint8Array.from(atob(pdfData.pdf), c => c.charCodeAt(0))], {type: 'application/pdf'});
+                        blobUrl = URL.createObjectURL(pdfBlob);
+                    }
+
+                    let myPassword64;
+                    let arrayBufferDec;
+                    let iv;
+                    if (tipo === "tipo3") {
+
+
+                        // el pdf en base 64 fue cifrado y guardado en base 64
+                        // se debe descifrar y mostrar
+                        arrayBufferDec = Uint8Array.from(atob(pdfData.pdf.data), c => c.charCodeAt(0));
+                        iv = Uint8Array.from(atob(pdfData.pdf.iv), c => c.charCodeAt(0));
+
+
+
+                        // en pdfData.arr_correos hay un arreglo con el correo de cada usuario y la contraseña cifrafa con la clave publica de cada usuario
+                        // se debe buscar el correo del usuario actual y descifrar la contraseña con su clave privada
+
+                        const myEmail = myData.data.email;
+
+                        myPassword64 = pdfData.arr_correos.find(c => c.email === myEmail).encryptedKeyBase64;
+                        console.log('password', myPassword64);
+
+
+                        const myPublicRSAKey = myData.data.rsaAOAEPpublicKey;
+                        console.log('myPublicRSAKey', myPublicRSAKey);
+
+                        // abir el archivo tipo json con un filechooser en donde este la clave privada
+                        // leer el archivo y obtener la clave privada
+
+
+                    }
+
                     PDFObject.embed(blobUrl, `#my-pdf-${doc.id_documento}`);
 
 
                     //
 
-                    const pdfBuffer = Uint8Array.from(atob(pdfData.pdf), c => c.charCodeAt(0));
-                    const arrayBuffer = pdfBuffer.buffer.slice(pdfBuffer.byteOffset, pdfBuffer.byteOffset + pdfBuffer.byteLength);
-                    let hash = await generateHash(arrayBuffer);
-                    console.log('Hash del pdf: ', hash);
+
+                    let pdfBuffer;
+                    let arrayBuffer;
+                    let hash;
+
+                    if (tipo === 'tipo1') {
+                        pdfBuffer = Uint8Array.from(atob(pdfData.pdf), c => c.charCodeAt(0));
+                        arrayBuffer = pdfBuffer.buffer.slice(pdfBuffer.byteOffset, pdfBuffer.byteOffset + pdfBuffer.byteLength);
+                        hash = await generateHash(arrayBuffer);
+                        console.log('Hash del pdf: ', hash);
+
+                    }
 
 
                     // añadir el boton para firmar
 
 
-                        const signButton = document.createElement('button');
+                    let signButton;
+                    signButton = document.createElement('button');
+                    if (tipo === 'tipo1' || tipo === 'tipo2') {
                         signButton.textContent = 'Firmar';
-
                         signButton.addEventListener('click', () => {
                             firmarDocumento(doc.id_documento, card, hash);
                         });
+                    }
 
-                        if(tipo === 'tipo1'){
-                            if (doc.status_personal === 1) {
-                                signButton.disabled = true;
-                            }
-                        }
+                    if (tipo === 'tipo3') {
+                        signButton.textContent = 'Descifrar';
+                        signButton.addEventListener('click', async () => {
+                            await descifrar(myPassword64, arrayBufferDec, doc, iv, firmas[0], card);
+                        });
+                    }
 
-                        if (tipo === 'tipo2'){
-                            signButton.style.display = 'none';
+                    if (tipo === 'tipo1') {
+                        if (doc.status_personal === 1) {
+                            signButton.disabled = true;
                         }
-                        card.appendChild(signButton);
+                    }
+
+                    if (tipo === 'tipo2') {
+                        signButton.style.display = 'none';
+                    }
+                    card.appendChild(signButton);
 
 
                     // ver quienes han firmado el documento
                     const firmas = pdfData.firmas;
                     console.log('firmas del documento: id_doc', doc.id_documento);
                     for (const firma of firmas) {
-                        if (firma.usuario_email === myData.data.email){
+                        if (firma.usuario_email === myData.data.email) {
                             card.style.backgroundColor = 'lightgreen';
-                            signButton.disabled = true;
+                            if (tipo === 'tipo1')
+                                signButton.disabled = true;
                         }
                         const publicKey64 = await getPublicKeyByIdUsuario(firma.id_usuario);
-                        const resVerify = await verifySignature(hash, firma.firma64, publicKey64);
-                        console.log('correo:', firma.usuario_email, 'id_usu:', firma.id_usuario, 'firma', firma.firma64, 'clave publica de usu', firma.id_usuario, publicKey64);
-                        console.log('resVerify:', resVerify);
+                        let resVerify;
+                        if(tipo === 'tipo1') {
+                            resVerify = await verifySignature(hash, firma.firma64, publicKey64);
+                            console.log('correo:', firma.usuario_email, 'id_usu:', firma.id_usuario, 'firma', firma.firma64, 'clave publica de usu', firma.id_usuario, publicKey64);
+                            console.log('resVerify:', resVerify);
+                        }
 
                         // Inside the loop where you create the firmaDiv:
                         const firmaDiv = document.createElement('div');
                         firmaDiv.classList.add('firmaDiv');
                         if (tipo === 'tipo1') {
                             firmaDiv.textContent = `Correo: ${firma.usuario_email} - Verificada: ${resVerify} - Firma: ${firma.firma64}`;
-                        }else{
+                        } else if (tipo === 'tipo2') {
                             firmaDiv.textContent = `remitente: ${firma.usuario_email} - Verificada: ${resVerify} - Firma: ${firma.firma64}`;
                         }
 
-                        // Tooltip container
-                        const tooltip = document.createElement('div');
-                        tooltip.classList.add('tooltip'); // Add a class for styling
-                        tooltip.textContent = `Correo: ${firma.usuario_email} - Verificada: ${resVerify} - Firma: ${firma.firma64} `; // Set full signature content
-                        tooltip.style.display = 'none'; // Hide by default
+                        if(tipo === 'tipo1' || tipo === 'tipo2') {
+                            // Tooltip container
+                            const tooltip = document.createElement('div');
+                            tooltip.classList.add('tooltip'); // Add a class for styling
+                            tooltip.textContent = `Correo: ${firma.usuario_email} - Verificada: ${resVerify} - Firma: ${firma.firma64} `; // Set full signature content
+                            tooltip.style.display = 'none'; // Hide by default
 
-                        // Append tooltip to the firmaDiv
-                        firmaDiv.appendChild(tooltip);
+                            // Append tooltip to the firmaDiv
+                            firmaDiv.appendChild(tooltip);
 
-                        // Event listeners for hover (mouseenter and mouseleave)
-                        firmaDiv.addEventListener('mouseenter', () => {
-                            tooltip.style.display = 'block'; // Show tooltip on hover
-                        });
+                            // Event listeners for hover (mouseenter and mouseleave)
+                            firmaDiv.addEventListener('mouseenter', () => {
+                                tooltip.style.display = 'block'; // Show tooltip on hover
+                            });
 
-                        firmaDiv.addEventListener('mouseleave', () => {
-                            tooltip.style.display = 'none'; // Hide tooltip on mouseleave
-                        });
+                            firmaDiv.addEventListener('mouseleave', () => {
+                                tooltip.style.display = 'none'; // Hide tooltip on mouseleave
+                            });
+                        }
 
                         card.appendChild(firmaDiv);
 
                     }
 
-                        card.appendChild(signButton);
-
+                    // card.appendChild(signButton);
 
 
                 }
@@ -245,7 +461,7 @@
         return hashHex;
     }
 
-    async function verifySignature(hash, firma64, publicKey64){
+    async function verifySignature(hash, firma64, publicKey64) {
 
         const hashBuffer = new TextEncoder().encode(hash);
 
@@ -291,8 +507,8 @@
 
         // Escuchar el evento 'change' del input
         fileInput.addEventListener('change', async (event) => {
-        const file = event.target.files[0];
-        const reader = new FileReader();
+            const file = event.target.files[0];
+            const reader = new FileReader();
 
             reader.onload = async (event) => {
                 // El contenido del archivo está en event.target.result
@@ -342,7 +558,6 @@
                 console.log('Firma en base64:', signature64);
 
 
-
                 // ahora para motivos de pruebas, verifica la firma
                 const publicKey64 = btoa(JSON.stringify(jsonData.rsaPublicKey));
                 const resVerify = await verifySignature(hash, signature64, publicKey64);
@@ -369,14 +584,14 @@
                 location.reload();
             };
 
-        reader.readAsText(file); // Leer el archivo como texto
-    });
+            reader.readAsText(file); // Leer el archivo como texto
+        });
 
-    // Simular un click en el input para abrir el selector de archivos
-    fileInput.click();
+        // Simular un click en el input para abrir el selector de archivos
+        fileInput.click();
 
 
-}
+    }
 
     function hexStringToArrayBuffer(hexString) {
         const byteArray = new Uint8Array(hexString.length / 2);
@@ -409,9 +624,6 @@
             return [];
         }
     }
-
-
-
 
 
     getDocs();

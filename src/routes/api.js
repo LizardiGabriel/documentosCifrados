@@ -402,11 +402,6 @@ async function sendConfidentialMemo(req, res){
         const fecha =  fechaActual.getFullYear().toString() + "_" + (fechaActual.getMonth() + 1).toString() + "_" +fechaActual.getDate().toString();
 
 
-        const pdfBuffer = Uint8Array.from(atob(pdf), c => c.charCodeAt(0));
-        const arrayBuffer = pdfBuffer.buffer.slice(pdfBuffer.byteOffset, pdfBuffer.byteOffset + pdfBuffer.byteLength);
-        let hash = await generateHash(arrayBuffer);
-        console.log('Hash del pdf: ', hash);
-        console.log('hash calculado...');
 
         console.log('fecha para createMemoNormalBD: ', fecha);
         const memoConfilId = await createMinuteBD(3, path2, 'hash', fecha);
