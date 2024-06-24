@@ -137,27 +137,7 @@ async function mostrarForm(opc) {
 }
 
 
-async function formMinuta() {
-    formid.innerHTML = `
-<form id="minuteForm">
-  <label for="meetingTitle">Meeting Title:</label>
-  <input type="text" id="meetingTitle" name="meetingTitle" required>
 
-  <label for="attendees">Attendees:</label>
-  <div id="selectedAttendees"></div>
-  <select id="attendees" name="attendees" required>
-    <option value="0">Select an attendee</option>
-  </select>
-  <button type="button" onclick="addAttendee()">Add Attendee</button>
-
-  <label for="minutesContent">Minutes Content:</label>
-  <textarea id="minutesContent" name="minutesContent" rows="10" required></textarea>
-
-  <button type="submit" onclick="enviarMinuta()">Submit</button>
-</form>
-`;
-
-}
 async function enviarMinuta() {
     console.log('enviarMinuta');
     event.preventDefault();
@@ -204,26 +184,7 @@ async function enviarMinuta() {
 }
 
 
-async function formMemorandum() {
-    formid.innerHTML = `
-<form id="memoForm">
-  <label for="memoTitle">Memorandum Title:</label>
-  <input type="text" id="memoTitle" name="memoTitle" required>
 
-  <label for="attendees">Destinatarios:</label>
-  <div id="selectedAttendees"></div>
-  <select id="attendees" name="attendees" required>
-    <option value="0">Select an attendee</option>
-  </select>
-  <button type="button" onclick="addAttendee()">Add Attendee</button>
-
-  <label for="memoContent">Memo Content:</label>
-  <textarea id="memoContent" name="memoContent" rows="10" required></textarea>
-
-  <button type="submit" onclick="enviarMemoNormal()">send and sign</button>
-</form>
-`;
-}
 
 async function enviarMemoNormal() {
     console.log('enviarMemoNormal');
@@ -447,27 +408,7 @@ async function getMyData() {
     return data;
 }
 
-async function formMemorandumSecreto(){
-    formid.innerHTML = `
-        <form id="confidentialMemoForm">
-          <label for="memoConfTitle">Memorandum Confidencial Title:</label>
-          <input type="text" id="memoConfTitle" name="memoConfTitle" required>
 
-          <label for="attendees">Destinatarios:</label>
-          <div id="selectedAttendees"></div>
-          <select id="attendees" name="attendees" required>
-            <option value="0">Select an attendee</option>
-          </select>
-          <button type="button" onclick="addAttendee()">Add Attendee</button>
-
-          <label for="memoConContent">Memo Content:</label>
-          <textarea id="memoConContent" name="memoConContent" rows="10" required></textarea>
-
-          <button type="submit" onclick="enviarMemoConf()">send</button>
-        </form>
-    `;
-
-}
 
 async function enviarMemoConf(){
     console.log('enviarMemoConf');

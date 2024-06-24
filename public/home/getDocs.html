@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
@@ -9,76 +10,28 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
 
-    
-    <title>My Website</title>
-    <link href="/style.css" rel="stylesheet">
-    <style>
-        .document-type-container {
-            margin-bottom: 20px;
-        }
 
-        .document-type-container h2 {
-            margin-bottom: 10px;
-        }
+    <title>nombrecito</title>
+    <link rel="stylesheet" href="/home/style.css">
 
-        .document-section { /* Estilos para la sección de tarjetas */
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        .document-card { /* Estilos para las tarjetas */
-            width: calc(33.33% - 20px);
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            padding: 20px;
-            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .document-card h3 {
-            margin-top: 0;
-        }
-
-        .document-card .pdf-viewer {
-            height: 200px;
-            overflow: hidden;
-        }
-
-        .document-card .firmaDiv {
-            width: 100%; /* Ensure the div takes full card width */
-            word-wrap: break-word; /* Break long words to fit the line */
-            overflow: hidden; /* Hide any overflowing text */
-            text-overflow: ellipsis; /* Show ellipsis (...) for cut-off text */
-            white-space: nowrap; /* Keep text on a single line */
-        }
-
-        .tooltip {
-            position: relative; /* Change position to relative */
-            display: block; /* Ensure the tooltip is always a block element */
-            width: 100%; /* Make tooltip take the full width of its container */
-            background-color: #fff;
-            padding: 5px;
-            border: 1px solid #ccc;
-            z-index: 10;
-            word-wrap: break-word; /* Allow long words to break */
-            white-space: normal; /* Allow text to wrap naturally */
-        }
-
-    </style>
 </head>
-<body>
-<header>
-    <h1>Mis Documentos</h1>
-</header>
-<main>
-    <section id="documents-container">
-    </section>
-</main>
-<footer>
-    <p>&copy; 2023 My Website</p>
-</footer>
 
-<script src="/pdf/ola.js"></script>
-<script src="/home/getDocs.js"></script>
+<body>
+    <header>
+        <h3><span id="nombrecito"></span><br/>documentos:</h3>
+        <button id="btn-logout" onclick="logout()">Cerrar Sesión</button>
+    </header>
+
+
+    <div class="div-primario">
+        <section id="documents-container">
+        </section>
+    </div>
+
+
+    <script src="/pdf/ola.js"></script>
+    <script src="/home/getDocs.js"></script>
+    <script src="/home/script.js"></script>
 </body>
+
 </html>

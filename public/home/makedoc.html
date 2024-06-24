@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,48 +10,144 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
 
-    
+
     <title>My Website</title>
-    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/home/style.css">
 
 </head>
-<body>
-<header>
-    <h1>Make a doc</h1>
-</header>
-<main>
-    <section>
-        <h2>Docs</h2>
-        <input type="checkbox" id="opcion1" name="opcion1" value="minuta">
-        <label for="opcion1">minuta</label><br>
-        <input type="checkbox" id="opcion2" name="opcion2" value="memorandum">
-        <label for="opcion2">memorandum</label><br>
-        <input type="checkbox" id="opcion3" name="opcion3" value="memorandum confidencial">
-        <label for="opcion3"> memorandum confidencial</label><br>
 
-        <button onclick="makeDoc()">Make doc</button>
+<body>
+    <header>
+        <h3><span id="nombrecito"></span><br />crea un documento</h3>
+        <button id="btn-logout" onclick="logout()">Cerrar Sesión</button>
+
+    </header>
+
+
+    <div class="div-primario">
+        <h2>Tipos de documento</h2>
+        <input type="checkbox" id="opcion1" name="opcion1" value="minuta">
+        <label for="opcion1">Minuta</label><br>
+        <input type="checkbox" id="opcion2" name="opcion2" value="memorandum">
+        <label for="opcion2">Memorandum</label><br>
+        <input type="checkbox" id="opcion3" name="opcion3" value="memorandum confidencial">
+        <label for="opcion3">Memorandum confidencial</label><br>
+
+        <button onclick="makeDoc()">Seleccionar documento</button>
 
         <div id="formid"></div>
 
+    </div>
 
 
-    </section>
+    <script>
+        async function formMinuta() {
+            formid.innerHTML = `
+            <div class="div-form-typeDoc">
+                <form id="minuteForm">
+                <label for="meetingTitle">Titulo de la minuta:</label>
+                <input type="text" id="meetingTitle" name="meetingTitle" required>
 
-</main>
-<footer>
-    <p>&copy; 2023 My Website</p>
-</footer>
-<!-- home.js -->
+                <label for="attendees">Participantes:</label>
+                <div id="selectedAttendees"></div>
+                <select id="attendees" name="attendees" required>
+                    <option value="0">Selecciona...</option>
+                </select>
+                <button type="button" onclick="addAttendee()">Añadir participante</button>
 
-<script src="/home/jspdf.min.js"></script>
+                <label for="minutesContent">Contenido:</label>
+                <textarea id="minutesContent" name="minutesContent" rows="10" required></textarea>
 
-<script src="script.js"></script>
-<script src="/home/handlebars.min.js"></script>
+                <button type="submit" onclick="enviarMinuta()">Crear minuta</button>
+                </form>
+            </div>
+            `;
+
+        }
+
+        async function formMemorandum() {
+            formid.innerHTML = `
+            <div class="div-form-typeDoc">
+                <form id="memoForm">
+                <label for="memoTitle">Titulo del memorandum:</label>
+                <input type="text" id="memoTitle" name="memoTitle" required>
+
+                <label for="attendees">Destinatarios:</label>
+                <div id="selectedAttendees"></div>
+                <select id="attendees" name="attendees" required>
+                    <option value="0">Selecciona...</option>
+                </select>
+                <button type="button" onclick="addAttendee()">Añadir participante</button>
+
+                <label for="memoContent">Contenido:</label>
+                <textarea id="memoContent" name="memoContent" rows="10" required></textarea>
+
+                <button type="submit" onclick="enviarMemoNormal()">Crear y firmar</button>
+                </form>
+            </div>
+            `;
+        }
+
+
+        async function formMemorandumSecreto() {
+            formid.innerHTML = `
+            <div class="div-form-typeDoc">
+                <form id="confidentialMemoForm">
+                <label for="memoConfTitle">Titulo de la minuta confidencial:</label>
+                <input type="text" id="memoConfTitle" name="memoConfTitle" required>
+
+                <label for="attendees">Destinatarios:</label>
+                <div id="selectedAttendees"></div>
+                <select id="attendees" name="attendees" required>
+                    <option value="0">Selecciona...</option>
+                </select>
+                <button type="button" onclick="addAttendee()">Añadir participante</button>
+
+                <label for="memoConContent">Contenido:</label>
+                <textarea id="memoConContent" name="memoConContent" rows="10" required></textarea>
+
+                <button type="submit" onclick="enviarMemoConf()">Crear y firmar</button>
+                </form>
+            <div>
+            `;
+
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Obtener todos los checkboxes
+            var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+
+            // Función para desmarcar todos los checkboxes excepto el seleccionado
+            function uncheckOthers(selectedCheckbox) {
+                checkboxes.forEach(function (checkbox) {
+                    if (checkbox !== selectedCheckbox) {
+                        checkbox.checked = false;
+                    }
+                });
+            }
+
+            // Añadir el evento de cambio a cada checkbox
+            checkboxes.forEach(function (checkbox) {
+                checkbox.addEventListener('change', function () {
+                    if (this.checked) {
+                        uncheckOthers(this);
+                    }
+                });
+            });
+        });
+
+
+    </script>
+    <script src="/home/jspdf.min.js"></script>
+
+    <script src="/home/script.js"></script>
+    <script src="/home/handlebars.min.js"></script>
 
 
 
-<script src="/home/makeDoc.js"></script>
+    <script src="/home/makeDoc.js"></script>
 
 
 </body>
+
 </html>

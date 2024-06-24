@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,24 +11,33 @@
     <link rel="manifest" href="/site.webmanifest">
 
 
-    <title>My Website</title>
-    <link rel="stylesheet" href="/style.css"> </head>
+    <title>title</title>
+    <link rel="stylesheet" href="/home/style.css">
+</head>
+
 <body>
-    <div id="headers">
-        <header>
-            <h1>Bienvenido usuario</h1>
-        </header>
+
+    <header>
+        <h3>Bienvenido <span id="nombrecito"></span>!</h3>
+        <button id="btn-logout" onclick="logout()">Cerrar Sesión</button>
+
+    </header>
+
+
+
+    <div class="div-primario">
+
+        <h4>Selecciona una opción:</h4>
+        <ul>
+            <li><a href="makedoc.html">Crear Documento</a></li>
+            <li><a href="getDocs.html">Consultar Mis Documentos</a></li>
+        </ul>
+
+
     </div>
 
+    <script src="/home/script.js"></script>
 
-    <div id="contenido">
-        <section>
-            <h2>home usuario</h2>
-            <a href="makedoc.html">make doc</a>
-            <a href="getDocs.html">get Docs</a>
-        </section>
-    </div>
-
-    <script src="/script.js"></script>
 </body>
+
 </html>

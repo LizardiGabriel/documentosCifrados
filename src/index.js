@@ -63,8 +63,8 @@ const rutas = [
 
     //Rutas de css de toda la interfaz
     ['/style.css', '../public/css/app.css'],
-    ['/home/style.css', '../public/css/app.css'],
 
+    ['/home/style.css', '../public/css/app.css'],
     ['/home.css', '../public/css/home.css'],
 
 
