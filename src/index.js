@@ -53,13 +53,21 @@ const rutas = [
     ['/script.js', '../public/js/sesion/sesion.js'],
     ['/home/script.js', '../public/js/home/home.js'],
     ['/getDocs.js', '../public/js/home/getDocs.js'],
+    ['/pdf/ola.js', '../public/js/home/ola.js'],
+    ['/home/getDocs.js', '../public/js/home/getDocs.js'],
+    ['/home/makeDoc.js', '../public/js/home/makeDoc.js'],
 
-
+    ['/home/jspdf.min.js', '../public/js/home/jspdf.min.js'],
+    ['/home/handlebars.min.js', '../public/js/home/handlebars.min.js'],
 
 
     //Rutas de css de toda la interfaz
     ['/style.css', '../public/css/app.css'],
-    ['/home/style.css', '../public/css/home.css'],
+    ['/home/style.css', '../public/css/app.css'],
+
+    ['/home.css', '../public/css/home.css'],
+
+
 
 
 ];
