@@ -408,6 +408,15 @@ async function getMyData() {
     return data;
 }
 
+async function generateAesKey() {
+    let keyAux, aesKey;
+    keyAux = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
+    aesKey = await crypto.subtle.exportKey("jwk", keyAux);
+    console.log("Generated AES key:", aesKey);
+    return aesKey;
+}
+
+
 
 
 async function enviarMemoConf(){
@@ -560,7 +569,9 @@ async function enviarMemoConf(){
                   }
                 * */
 
-                const aesKey = jsonData.aesKey;
+                const aesKey = await generateAesKey();
+                
+
                 const iv = window.crypto.getRandomValues(new Uint8Array(12));
                 const algorithm = {
                     name: 'AES-GCM',
