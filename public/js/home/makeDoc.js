@@ -680,7 +680,11 @@ async function enviarMemoConf(){
                 });
 
                 const resFetchSendMemoConf = await response.json();
-                //console.log('data:', data);
+                console.log('resFetchSendMemoConf:', resFetchSendMemoConf);
+
+                if (resFetchSendMemoConf.message === "Memo normal creado exitosamente" ){
+                    window.location.href = '/home/minutas.html';
+                }
 
 
             };

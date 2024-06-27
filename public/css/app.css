@@ -1,5 +1,5 @@
 .div-primario{
-    background-color: #05A34E;
+    background-color: #bbd4c1;
 }
 .div-form-typeDoc{
     background-color: #dbb8eb;
@@ -33,7 +33,7 @@
 }
 
 .document-card .pdf-viewer {
-    height: 200px;
+    height: 600px;
     overflow: hidden;
 }
 
