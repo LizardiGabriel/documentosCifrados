@@ -4,7 +4,7 @@ async function displayUserName() {
     const myData = await getMyData();
     console.log('respuesta: ', myData.data);
     const nomP = document.getElementById("nombrecito");
-    nomP.innerHTML = myData.data.email;
+    nomP ? nomP.innerHTML =  myData.data.email: nomP ;
 }
 
 async function getMyData() {

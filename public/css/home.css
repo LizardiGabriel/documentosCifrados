@@ -26,6 +26,10 @@ main {
     align-content: center;
 }
 
+ul {
+    padding: 0;
+}
+
 ul li{
     margin: 5vh 20vh;
     list-style-type: none;
@@ -211,4 +215,58 @@ form > textarea {
     border: 1px solid lightgrey;
     padding: 16px 16px;
     font-size: 18px;
+}
+
+.document-section {
+    margin-top: 2vh;
+    width: 100%;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.document-card {
+    padding: 16px;
+    border-radius: 15px;
+    border: 1px solid lightgray;
+    width: 30%;
+    text-align: left;
+}
+
+.document-card > h3 {
+    font-size: 24x;
+    font-weight: 500;
+}
+
+.document-card > p > a {
+    padding: 0;
+    text-decoration: underline;
+    color: blue;
+    background-color: inherit;
+    border: 0px;
+    border-radius: 0;
+    font-size: 18px;
+}
+
+.pdf-viewer {
+    height: 50vh;
+}
+
+.document-card > button {
+    margin-left: 30%;
+    width: 40%;
+    padding: 8px 16px;
+    font-size: 24px;
+    border: 0px;
+    margin-bottom: 2vh;
+}
+
+.document-card >button:disabled {
+    background-color: rgb(114, 126, 125);
+    font-weight: 200;
+    cursor: default;
+}
+
+.firmaDiv {
+    overflow: auto;
 }
