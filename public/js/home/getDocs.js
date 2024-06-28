@@ -135,14 +135,6 @@ async function descifrar(myPassword64, arrayBufferDec, doc, iv, firma, card) {
             });
 
             card.appendChild(firmaDiv);
-
-
-
-
-
-
-
-
         };
 
         reader.readAsText(file); // Leer el archivo como texto
@@ -150,8 +142,6 @@ async function descifrar(myPassword64, arrayBufferDec, doc, iv, firma, card) {
 
     // Simular un click en el input para abrir el selector de archivos
     fileInput.click();
-
-
 }
 
 async function getDocs() {

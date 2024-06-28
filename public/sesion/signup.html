@@ -14,9 +14,10 @@
 </head>
 
 <body>
-    <main>
-
+    <header>
         <h1>Crea una cuenta</h1>
+    </header>
+    <main>
         <form id="signupForm">
             <label for="email">Correo:</label>
             <input type="email" id="email" name="email" required><br><br>
@@ -26,23 +27,23 @@
             <input type="text" id="lastName" name="lastName" required><br><br>
 
             <label for="password">Contraseña:</label>
-            <input type="password" id="password" name="password" required><br><br>
+            <input type="password" id="password" name="password" required><br><br><br><br>
 
-            <input type="submit" value="Crear cuenta">
+            <input type="submit" value="Crear cuenta" class="btn">
         </form>
     </main>
 
     <script>
-        let keyAux, aesKey;
+        //let keyAux, aesKey;
         let rsaKey, privateKey, publicKey;
 
         let rsaOAEPKey, rsaOAEPprivateKey, rsaOAEPpublicKey;
 
-        async function generateAesKey() {
+        /*async function generateAesKey() {
             keyAux = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
             aesKey = await crypto.subtle.exportKey("jwk", keyAux);
             console.log("Generated AES key:", aesKey.k);
-        }
+        }*/
 
         async function generateRsaKeys() {
             const keys = await crypto.subtle.generateKey(
@@ -81,7 +82,7 @@
 
         function downloadKeys(email) {
             const keys = {
-                aesKey: aesKey,
+                //aesKey: aesKey,
                 rsaPublicKey: publicKey,
                 rsaPrivateKey: privateKey,
                 rsaOAEPpublicKey: rsaOAEPpublicKey,
@@ -110,7 +111,7 @@
             for (var pair of formData.entries()) {
                 jsonData[pair[0]] = pair[1];
             }
-            await generateAesKey();
+            //await generateAesKey();
             await generateRsaKeys();
 
             const publicKey64 = btoa(JSON.stringify(publicKey));
@@ -143,6 +144,9 @@
                         // gurardar las llaves en un documento de texto y descargarlo en el navegador
 
                         downloadKeys(email);
+
+
+                        window.location.href = "http://localhost:3000/login.html";
                     } else {
                         alert("Sign up failed");
 

@@ -24,7 +24,7 @@ formid.insertAdjacentHTML('beforeend', returnHTMLformid());
 
 function returnHTMLformid() {
     return `
-<P>selecciona alguna opcion para crer el documento</P>
+<P>Selecciona alguna opción para crear el documento</P>
 `;
 }
 
@@ -63,7 +63,7 @@ function addAttendee() {
     newAttendee.textContent = selectedAttendee.text;
     newAttendee.dataset.id_usuario = selectedAttendee.value;
     const removeButton = document.createElement('button');
-    removeButton.textContent = ' Remove';
+    removeButton.textContent = 'x';
     removeButton.onclick = () => removeAttendee(removeButton);
     newAttendee.appendChild(removeButton);
     selectedAttendeesDiv.appendChild(newAttendee);

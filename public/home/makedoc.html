@@ -11,56 +11,61 @@
     <link rel="manifest" href="/site.webmanifest">
 
 
-    <title>My Website</title>
-    <link rel="stylesheet" href="/home/style.css">
+    <title>Crear Documento</title>
+    <link rel="stylesheet" href="../home.css">
 
 </head>
 
 <body>
     <header>
-        <h3><span id="nombrecito"></span><br />crea un documento</h3>
+        <h1>Crea un documento</h1><br><br>
         <button id="btn-logout" onclick="logout()">Cerrar Sesión</button>
-
     </header>
 
-
-    <div class="div-primario">
+    <main>
         <h2>Tipos de documento</h2>
-        <input type="checkbox" id="opcion1" name="opcion1" value="minuta">
-        <label for="opcion1">Minuta</label><br>
-        <input type="checkbox" id="opcion2" name="opcion2" value="memorandum">
-        <label for="opcion2">Memorandum</label><br>
-        <input type="checkbox" id="opcion3" name="opcion3" value="memorandum confidencial">
-        <label for="opcion3">Memorandum confidencial</label><br>
-
-        <button onclick="makeDoc()">Seleccionar documento</button>
-
+        <div class="types">
+            <div class="type">
+                <input type="checkbox" id="opcion1" name="opcion1" value="minuta">
+                <label for="opcion1">Minuta</label><br>
+            </div>
+            <div class="type">
+                <input type="checkbox" id="opcion2" name="opcion2" value="memorandum">
+                <label for="opcion2">Memorandum</label><br>
+            </div>
+            <div class="type">
+                <input type="checkbox" id="opcion3" name="opcion3" value="memorandum confidencial">
+                <label for="opcion3">Memorandum confidencial</label><br><br>
+            </div>
+        </div>
+        <div class="makedoc">
+            <button onclick="makeDoc()">Seleccionar documento</button>
+        </div>
         <div id="formid"></div>
-
-    </div>
-
-
+    </main>
     <script>
         async function formMinuta() {
             formid.innerHTML = `
             <div class="div-form-typeDoc">
-                <form id="minuteForm">
-                <label for="meetingTitle">Titulo de la minuta:</label>
-                <input type="text" id="meetingTitle" name="meetingTitle" required>
+        <form id="minuteForm">
+            <label for="meetingTitle">Titulo de la minuta:</label>
+            <input type="text" id="meetingTitle" name="meetingTitle" required>
 
+            <div class="attendees">
                 <label for="attendees">Participantes:</label>
-                <div id="selectedAttendees"></div>
                 <select id="attendees" name="attendees" required>
                     <option value="0">Selecciona...</option>
                 </select>
-                <button type="button" onclick="addAttendee()">Añadir participante</button>
-
-                <label for="minutesContent">Contenido:</label>
-                <textarea id="minutesContent" name="minutesContent" rows="10" required></textarea>
-
-                <button type="submit" onclick="enviarMinuta()">Crear minuta</button>
-                </form>
+                <button type="button" onclick="addAttendee()">+</button>
             </div>
+            <div id="selectedAttendees"></div>
+            <label for="minutesContent">Contenido:</label>
+            <textarea id="minutesContent" name="minutesContent" rows="10" required></textarea>
+            <div>
+            <button type="submit" onclick="enviarMinuta()">Crear minuta</button>
+            </div>
+        </form>
+    </div>
             `;
 
         }
@@ -72,17 +77,21 @@
                 <label for="memoTitle">Titulo del memorandum:</label>
                 <input type="text" id="memoTitle" name="memoTitle" required>
 
+                <div class="attendees">
                 <label for="attendees">Destinatarios:</label>
-                <div id="selectedAttendees"></div>
+                
                 <select id="attendees" name="attendees" required>
                     <option value="0">Selecciona...</option>
                 </select>
-                <button type="button" onclick="addAttendee()">Añadir participante</button>
+                <button type="button" onclick="addAttendee()">+</button>
+                </div>
+                <div id="selectedAttendees"></div>
 
                 <label for="memoContent">Contenido:</label>
                 <textarea id="memoContent" name="memoContent" rows="10" required></textarea>
-
+                <div>
                 <button type="submit" onclick="enviarMemoNormal()">Crear y firmar</button>
+                </div>
                 </form>
             </div>
             `;
@@ -93,20 +102,25 @@
             formid.innerHTML = `
             <div class="div-form-typeDoc">
                 <form id="confidentialMemoForm">
-                <label for="memoConfTitle">Titulo de la minuta confidencial:</label>
+                <label for="memoConfTitle">Titulo del memorandum confidencial:</label>
                 <input type="text" id="memoConfTitle" name="memoConfTitle" required>
 
+                <div class="attendees">
                 <label for="attendees">Destinatarios:</label>
-                <div id="selectedAttendees"></div>
                 <select id="attendees" name="attendees" required>
                     <option value="0">Selecciona...</option>
                 </select>
-                <button type="button" onclick="addAttendee()">Añadir participante</button>
+                <button type="button" onclick="addAttendee()">+</button>
+                </div>
+
+                <div id="selectedAttendees"></div>
 
                 <label for="memoConContent">Contenido:</label>
                 <textarea id="memoConContent" name="memoConContent" rows="10" required></textarea>
 
+                <div>
                 <button type="submit" onclick="enviarMemoConf()">Crear y firmar</button>
+                </div>
                 </form>
             <div>
             `;
